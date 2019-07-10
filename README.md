@@ -33,3 +33,9 @@ Viewers can only use the following commands:
     
     
 DB integration TBD.    
+
+
+
+**References:
+Cprice1771 RumpusAPI.js
+https://github.com/Cprice1771/Rumpus-CE/blob/master/js-client/RumpusAPI.js
