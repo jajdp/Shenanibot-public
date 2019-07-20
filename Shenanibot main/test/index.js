@@ -393,13 +393,7 @@ const client = new tmi.client(options);
                 client.action(twitchChannel, `: First of all... I'm not a rapper, but a level ID is normally 7 digits long, But I'm not a rapper RlyTho `);
                 return;
             }
-            
-            //FILTER 4 : CODE IS 7 DIGITS LONG
-            if(viewerMessage[1].length != 7){
-                client.action(twitchChannel, `: First of all... I'm not a rapper, but a level ID is normally 7 digits long, But I'm not a rapper RlyTho `);
-                return;
-            }
-            
+                        
             //SEARCH LEVEL ON RAPI
             var searchLevelByIdResults = await rapi.SearchLevels({ levelIds: [viewerMessage[1]]});
 
@@ -626,101 +620,14 @@ const client = new tmi.client(options);
 
          //MISCELANEOUS
          if(message === '!cmd') {
-            client.action(twitchChannel, `: !add !bot !current !queue !totalq !about`);
+            client.action(twitchChannel, `: !add !bot !current !queue !totalq`);
             return;
          }
 
          if(message === '!bot') {
-            client.action(twitchChannel, ': Hi! My name is KommSusserBot. but you can call me KSB. Nice to meet you. I like to manage LevelHead levels. Write !cmd on the chat for a list of the commands you can use on me! VoHiYo');
+            client.action(twitchChannel, ': This twitch chat Bot was for the LevelHead Community. Please take good care of it. VoHiYo');
             return;
          }
-
-         if(message === '!about') {
-            client.action(twitchChannel, ': Every LevelHead stream we will do a giveaway of the bucks he will earn the same stream. The only rule to be a winner is to be here when we do the giveaway which we do once we get to 100k bucks or the stream ends. In order to enter the giveaway type [!join] in the chat! Good luck!');
-            return;
-         }
-
-         
-//-----------------MANAGING CONTESTANTS--------------------//
-
-if(message === '!winner' && user['display-name']  === TwitchStreamer){
-    var min=0; 
-    var max=(contestantPrize.length);  
-    var rnd = Math.floor(Math.random() * (+max - +min)) + +min;
-    //client.action(twitchChannel, ': Random index is : ' + rnd );
-    client.action(twitchChannel, ': The winner is ' + contestantPrize[rnd] + '! PartyHat HolidayPresent  ');
- }
-
- if(message === '!join'){
-   //search
-   if(contestStatus != false){
-    var flagContestanRegistered = false; 
-    if(contestantPrize.length != 0){
-
-            for (var indexSearchContestant = 0;  indexSearchContestant<=(contestantPrize.length-1); indexSearchContestant++){
-                
-                    var contestanRegistered = contestantPrize[indexSearchContestant];  
-                          
-                    if (contestanRegistered === user['display-name']){
-                        flagContestanRegistered = true;
-                        indexSearchContestant = contestantPrize.length +1;
-                    };  
-                }
-
-            if(flagContestanRegistered != true){       
-                contestantPrize[indexContestants]= user['display-name'];
-                indexContestants = indexContestants + 1;
-                client.action(twitchChannel, `: Submission succesful! `);
-                client.action(twitchChannel, `: This is the list of contestants : ` + contestantPrize);
-            }else{
-                client.action(twitchChannel, `: You are already registered for the contest. HumbleLife `);
-            }
-        } else {
-            contestantPrize[indexContestants]= user['display-name'];
-            indexContestants = indexContestants + 1;
-            client.action(twitchChannel, `: Submission succesful! `);
-            client.action(twitchChannel, `: This is the list of contestants : ` + contestantPrize);
-            //client.action(twitchChannel, `: The contest queue is empty!! Now is your chance to win LevelHead Bucks RitzMitz `);
-        }
-    } else {
-        client.action(twitchChannel, `: Contest submissions are no longer available TearGlove`);
-    }
-}
-
-if(message === '!closeContest' && user['display-name']  === TwitchStreamer) {
-    
-    contestStatus = false;
-
-     client.action(twitchChannel, ': Contest submissions has been closed VoteNay ');
-    
- }
-
- if(message === '!openContest' && user['display-name']  === TwitchStreamer) {
-    
-    contestStatus = true;
-
-     client.action(twitchChannel, ': Contest submissions are currently open VoteYea ');
-    
- }
-
- if(message === '!contestQ' && user['display-name']  === TwitchStreamer) {
-    
-    if(contestantPrize === null){
-        client.action(twitchChannel, `: The list of contestants is empty`);
-        return
-    }
-
-    client.action(twitchChannel, `: This is the list of contestants : ` + contestantPrize);
-    
- }
-
- if(message === '!newQ' && user['display-name']  === TwitchStreamer) {
-    contestantPrize = [];
-    indexContestants = 0;
-    client.action(twitchChannel, `: The list of contestans is now empty.`);
-    
- }
-
          
     });
 })();
