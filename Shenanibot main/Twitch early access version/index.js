@@ -1,40 +1,18 @@
-//after installing node.js you will need to install tmi and axios too.
 const tmi = require('tmi.js');
 const Axios = require('axios');
-//-------------INPUT PARAMETERS FOR KSB--------------
+const fs = require('fs');
 
-/*LEVEL HEAD DELEGATION KEY
-You will need a delegation key from your own LEVELHEAD account with the following permissions:
-    -View own and others' Levelhead data (levels, profiles, aliases, etc).
-    -View, add, and delete own Levelhead level bookmarks.
-After you generated it and copy it, paste it on the following paramenter and make it look like this.
-const delegationKeyStreamer = 'abcdefghijklmopqrstuvwxyz';//
-*/
+var path = process.cwd();
+var buffer = fs.readFileSync(path + "\\properties.json");
+let jsonParsed= JSON.parse(buffer);
 
-const delegationKeyStreamer = '';//
+const delegationKeyStreamer = jsonParsed.delegationKeyStreamer;
+const twitchChannel = jsonParsed.twitchChannel;
+const TwitchStreamer = jsonParsed.TwitchStreamer;
 
-/*TWITCH STREAMER CHANNEL NAME
-On your own channel https://www.twitch.tv/channelName
-get the last part that says "channelName" and paste it in the following parameter so it looks like this:
-const twitchChannel = 'channelName'
-*/
 
-const twitchChannel = '' 
+//--------------LOGIC FOR THE KSB-------------
 
-/*TWITCH STREAMER DISPLAYED USERNAME
-On your own channel write somethin on the chat and copy your twitch username displayed. 
-Example:
-
-TwitchDisplayUserName: hey what's up?
-
-"TwitchDisplayUserName" would be your display UserName then paste it in the following parameter so it looks like this
-const TwitchStreamer = 'TwitchDisplayUserName'
-*/
-
-const TwitchStreamer = '' 
-
-//--------------LOGIC FOR THE BOT-------------
-//A personal twitch bot account and its oauth key are needed for this to work
 const options = {
     options: {
         debug: true,
@@ -44,10 +22,8 @@ const options = {
         reconnect: true,
     },
     identity: {
-        //twitch bot username: 'Shenanibot'
-        username: '',
-        //example: password:oauth:123456789123456789123456789
-        password: '',
+        username: jsonParsed.username,
+        password: jsonParsed.password
     },
     channels: [twitchChannel],
 };

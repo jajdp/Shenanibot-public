@@ -70,5 +70,6 @@ node_modules/axios/lib/helpers/cookies.js
 node_modules/axios/lib/helpers/deprecatedMethod.js
 package.json
 package-lock.json
-Shenanibot main\test\package.json
-Shenanibot main\test\package-lock.json
+Shenanibot main/test/package.json
+Shenanibot main/test/package-lock.json
+Shenanibot main/Twitch early access version/node_modules/
