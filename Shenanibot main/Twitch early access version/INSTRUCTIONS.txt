@@ -77,7 +77,7 @@ npm init
 
 npm install axios
 (and wait for it to finish installing)
-npm install tmi
+npm install tmi.js
 (and wait for it to finish installing)
 node .\index.js
 
