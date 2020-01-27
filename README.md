@@ -1,6 +1,13 @@
 # Shenanibot-public
 Shenanibot is going to be a free twitch chat bot developed for streamers playing LevelHead. Its purpose is to help streamers manage their level queues.
 
+_Sooo... what does it do?_
+
+It adds levels directly to your bookmarks so you don't type them. Then you just control the level queue by using the commands.
+
+_Do you want to change the commands or add some of your own?_
+
+Well JavaScript is easy to learn and here you have the source code. So... you now have it all. Although forking the git and then helping us make the bot even better would be nice, you can just keep your changes to yourself. Just have fun!
 
 The bot has the following commands;
 
