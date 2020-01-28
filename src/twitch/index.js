@@ -3,7 +3,7 @@ const Axios = require('axios');
 const fs = require('fs');
 
 var path = process.cwd();
-var buffer = fs.readFileSync(path + "./properties.json");
+var buffer = fs.readFileSync(path + "/src/twitch/properties.json");
 let jsonParsed = JSON.parse(buffer.toString());
 
 const delegationKeyStreamer = jsonParsed.delegationKeyStreamer;

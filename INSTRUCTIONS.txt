@@ -9,7 +9,9 @@
 ======================================================
 
 GREETINGS!
-Hello fellow LevelHead streamer. I see you are interested on using this chatbot. Here's a quick guide for you to start setting up this Shenanibot. Have fun! If you have any question reggarding this project in specific just ask me directly on Discord. I'm jajdp signing out.
+Hello fellow LevelHead streamer. I see you are interested on using this chatbot. Here's a quick guide for you 
+to start setting up this Shenanibot. Have fun! If you have any question reggarding this project in specific 
+just ask me directly on Discord. I'm jajdp signing out.
 
 GETTING STARTED
 Materials:
@@ -20,7 +22,8 @@ Materials:
 +Internet [duh..?]
 
 
-If you don't know how to run a JS script, that's fine. This quick guide will teach you how to run it in the most simple way. You will need to install node.js in order to run the file index.js which contains all the chatbot's logic.
+If you don't know how to run a JS script, that's fine. This quick guide will teach you how to run it in the most simple way. 
+You will need to install node.js in order to run the file index.js which contains all the chatbot's logic.
 
 So now, go to https://nodejs.org and download the latest version of the software and install it like any other regular program.
 
@@ -52,9 +55,12 @@ TwitchDisplayUserName: hey what's up?
 "TwitchStreamer" = "TwitchDisplayUserName"
 
 TWITCH BOT USERNAME AND PASSWORD
-Here's the part where we will need the second twitch account we specified in the MATERIALS section. This account will be the account of the bot.
-The chatbot will take full control of this twitch account, so you are better just creating a new twitch account just for your bot. Please do not use your own streaming account, you've been warned.
-Once you have the second twitch account ready. You will need its username (username you use to log in) and OAuth password. You can get the OAuth password by going to this link:
+Here's the part where we will need the second twitch account we specified in the MATERIALS section. 
+This account will be the account of the bot.
+The chatbot will take full control of this twitch account, so you are better just creating a new twitch account just for your bot. 
+Please do not use your own streaming account, you've been warned.
+Once you have the second twitch account ready. You will need its username (username you use to log in) and OAuth password. 
+You can get the OAuth password by going to this link:
 https://twitchapps.com/tmi/ and letting the website get permissions for the account you are planning to use as a chatbot.
 Once you have this information, just copy and paste it into the "properties.json" file as it's shown:
 
