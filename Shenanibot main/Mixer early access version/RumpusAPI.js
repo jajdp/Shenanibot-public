@@ -27,28 +27,28 @@ module.exports = class RumpusAPI {
 
     getClient() {
         return Axios.create({
-            baseURL: 'https://www.bscotch.net/api/',  
+            baseURL: 'https://www.bscotch.net/api/',
             timeout: 10000,
             headers: {
-                'Rumpus-Delegation-Key' : this.delegationKey,
+                'Rumpus-Delegation-Key': this.delegationKey,
             }
         });
-      
+
     }
 
-    
+
     getUrlParams(searchParams) {
-        let params= '';
-        for(let param in searchParams) {
-          if(Array.isArray(searchParams[param])) {
-            params += `${param}=${searchParams[param].join(',')}&`
-          } else {
-            params += `${param}=${searchParams[param]}&`
-          }
+        let params = '';
+        for (let param in searchParams) {
+            if (Array.isArray(searchParams[param])) {
+                params += `${param}=${searchParams[param].join(',')}&`
+            } else {
+                params += `${param}=${searchParams[param]}&`
+            }
         }
-        
-        if(params.length > 0) {
-          params = params.slice(0, -1);
+
+        if (params.length > 0) {
+            params = params.slice(0, -1);
         }
 
         return params;
@@ -74,18 +74,18 @@ module.exports = class RumpusAPI {
         const httpClient = await this.getClient();
         return (await httpClient.get(`levelhead/aliases?userIds=${userId}`)).data.data[0]; //don't ask....
     }
-  
+
     async bulkGetUsersById(users) {
-      const httpClient = await this.getClient();
-    
-      let mappedUsers = [];
-      while(users.length > 0) {
-        let toGet = users.splice(0, Math.min(64, users.length));
-        let userReuslt = (await httpClient.get(`levelhead/aliases?userIds=${toGet.join(',')}`)).data.data;
-        mappedUsers = mappedUsers.concat(userReuslt);
-      }
-    
-      return mappedUsers;
+        const httpClient = await this.getClient();
+
+        let mappedUsers = [];
+        while (users.length > 0) {
+            let toGet = users.splice(0, Math.min(64, users.length));
+            let userReuslt = (await httpClient.get(`levelhead/aliases?userIds=${toGet.join(',')}`)).data.data;
+            mappedUsers = mappedUsers.concat(userReuslt);
+        }
+
+        return mappedUsers;
     }
 
     async SearchUsers(searchParams) {
@@ -95,50 +95,50 @@ module.exports = class RumpusAPI {
     }
 
     /* Bookmarks */
-    async searchBookmarks(searchParams, apiKey=null) {
+    async searchBookmarks(searchParams, apiKey = null) {
         const httpClient = await this.getClient();
         httpClient.defaults.headers['Rumpus-Delegation-Key'] = apiKey || this.apiKey;
         const params = this.getUrlParams(searchParams)
         return (await httpClient.get(`levelhead/bookmarks?${params}`)).data.data;
     }
 
-    async purgeBookmarks(apiKey=null) {
+    async purgeBookmarks(apiKey = null) {
         const httpClient = await this.getClient();
         httpClient.defaults.headers['Rumpus-Delegation-Key'] = apiKey || this.apiKey;
-        
+
         return (await httpClient.delete(`levelhead/bookmarks`));
     }
 
-    async addBookmark(lookupCode, apiKey=null) {
+    async addBookmark(lookupCode, apiKey = null) {
         const httpClient = await this.getClient();
         httpClient.defaults.headers['Rumpus-Delegation-Key'] = apiKey || this.apiKey;
-        
+
         return (await httpClient.put(`levelhead/bookmarks/${lookupCode}`));
     }
 
-    async removeBookmark(lookupCode, apiKey=null) {
+    async removeBookmark(lookupCode, apiKey = null) {
         const httpClient = await this.getClient();
         httpClient.defaults.headers['Rumpus-Delegation-Key'] = apiKey || this.apiKey;
-        
+
         return (await httpClient.delete(`levelhead/bookmarks/${lookupCode}`));
     }
 
     /* Levels */
     async getLevelById(levelId) {
-      const httpClient = await this.getClient();
-      return (await httpClient.get(`levelhead/levels?levelIds=${levelId}&limit=1&includeStats=true&includeRecords=true`)).data.data[0]; //don't ask....
+        const httpClient = await this.getClient();
+        return (await httpClient.get(`levelhead/levels?levelIds=${levelId}&limit=1&includeStats=true&includeRecords=true`)).data.data[0]; //don't ask....
     }
 
-    async bulkGetLevelsById(levelIds, includeStats=true, includeRecords=true) {
-       
+    async bulkGetLevelsById(levelIds, includeStats = true, includeRecords = true) {
+
         const httpClient = await this.getClient();
         let newLevelData = [];
-        while(levelIds.length > 0) {
-          let toGet = levelIds.splice(0, Math.min(16, levelIds.length));
-          let levelResults = (await httpClient.get(`levelhead/levels?levelIds=${toGet.join(',')}&limit=64&includeStats=${includeStats}&includeRecords=${includeRecords}`)).data.data;
-          newLevelData = newLevelData.concat(levelResults);
+        while (levelIds.length > 0) {
+            let toGet = levelIds.splice(0, Math.min(16, levelIds.length));
+            let levelResults = (await httpClient.get(`levelhead/levels?levelIds=${toGet.join(',')}&limit=64&includeStats=${includeStats}&includeRecords=${includeRecords}`)).data.data;
+            newLevelData = newLevelData.concat(levelResults);
         }
-    
+
         return newLevelData;
     }
 
@@ -152,7 +152,7 @@ module.exports = class RumpusAPI {
         const httpClient = await this.getClient();
         return await httpClient.get(`levelhead/level-tags/counts`).data;
     }
- 
-    
+
+
 }
 
