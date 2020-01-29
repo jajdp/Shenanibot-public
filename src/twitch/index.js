@@ -1,6 +1,6 @@
-import * as fs from 'fs';
-import * as tmi from 'tmi.js';
-import * as rumpus from '@bscotch/rumpus-ce';
+const fs = require('fs');
+const tmi = require('tmi.js');
+const rumpus = require('@bscotch/rumpus-ce');
 
 const buffer = fs.readFileSync(__dirname + '/properties.json');
 const parsed = JSON.parse(buffer.toString());
