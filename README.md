@@ -1,74 +1,46 @@
 # Shenanibot-public
-Shenanibot is going to be a free twitch chat bot developed for streamers playing LevelHead. Its purpose is to help streamers manage their level queues.
+Shenanibot is a free twitch chat bot developed for streamers playing LevelHead. Its purpose is to help streamers manage their level queues.
 
-_Sooo... what does it do?_
+## Sooo... what does it do?
 
-It adds levels directly to your bookmarks so you don't type them. Then you just control the level queue by using the commands.
+The bot lets your viewers enter levelcodes for you to try, and automatically syncs them to your bookmarks directly in LevelHead, so that you don't have to type them in!
 
-_Do you want to change the commands or add some of your own?_
+## Commands
+
+**Streamer Commands**
+  
+!prev : Sets the index queue to the previous level. Now the current level would be the previous one.  
+!next : Sets the index queue to the next level  
+!current : Shows information about the current level being played  
+!clear : Mark a level as beaten  
+!skip : Mark a level as skipped or not beaten  
+  
+**Viewer Commands**  
+
+!add \[level code\] : Adds a level to the viewer level queue  
+!q or !queue : Shows up to 5 next levels in the queue  
+!totalq : Shows the total number of levels in the queue as well as the quantity of levels beaten and unbeaten.
+!cmd : Shows some quick commands for viewers  
+!about : Shows customized message  
+!bot : Shows bot description  
+
+## Want to add or edit commands?
 
 Well JavaScript is easy to learn and here you have the source code. So... you now have it all. Although forking the git and then helping us make the bot even better would be nice, you can just keep your changes to yourself. Just have fun!
 
-The bot has the following commands;
+---
 
-**FOR THE STREAMER:**
+# Bot Setup
 
-_QUEUE MANAGEMENT_
-    
-!prev : Sets the index queue to the previous level. Now the current level would be the previous one.    
-!next : Sets the index queue to the next level    
-!current : Shows information about the current level being played    
-!clear : Mark a level as beaten    
-!skip : Mark a level as skipped or not beaten    
-!add [level code] : Adds a level to the viewer level queue    
-!q or !queue : Shows up to 5 next levels in the queue    
-!totalq : Shows the total number of levels in the queue as well as the quantity of levels beaten and unbeaten.    
-    
-_MISC_    
-    
-!cmd : Shows some quick commands for viewers    
-!about : Shows customized message    
-!bot : Shows bot description    
-    
-_VIEWERS INTERACTION_    
-Viewers can only use the following commands:    
-    
-!add    
-!current    
-!q or !queue    
-!totalq    
-    
-    
-DB integration TBD.    
+**Have any questions?**
+You can join the [Butterscotch Shenanigans Discord](https://discord.gg/w55QE5Y) and ask any questions you have!  
 
+## Getting Started
 
-
-**References:
-Cprice1771 RumpusAPI.js
-https://github.com/Cprice1771/Rumpus-CE/blob/master/js-client/RumpusAPI.js
-
-======================================================
- _____ _                            _ _           _   
-/  ___| |                          (_) |         | |  
-\ `--.| |__   ___ _ __   __ _ _ __  _| |__   ___ | |_ 
- `--. \ '_ \ / _ \ '_ \ / _` | '_ \| | '_ \ / _ \| __|
-/\__/ / | | |  __/ | | | (_| | | | | | |_) | (_) | |_ 
-\____/|_| |_|\___|_| |_|\__,_|_| |_|_|_.__/ \___/ \__|
-                                                      
-======================================================
-
-GREETINGS!
-Hello fellow LevelHead streamer. I see you are interested on using this chatbot. Here's a quick guide for you 
-to start setting up this Shenanibot. Have fun! If you have any question regarding this project in specific 
-just ask FantasmicGalaxy directly on Discord.
-
-GETTING STARTED
-Materials:
-
-+Node.js
-+Twitch account for streaming
-+Twitch account for the bot
-+Internet [duh..?]
+**Materials:**  
+* Node.js
+* Streamer Twitch account
+* Bot Twitch account
 
 
 If you don't know how to run a JS script, that's fine. This quick guide will teach you how to run it in the most simple way. 
