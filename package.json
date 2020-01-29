@@ -4,6 +4,7 @@
   "description": "A Twitch bot that helps with managing a queue of levels for Levelhead streamers",
   "main": "src/twitch/index.js",
   "dependencies": {
+    "@bscotch/rumpus-ce": "^1.1.0",
     "axios": "^0.19.2",
     "tmi.js": "^1.5.0"
   },
