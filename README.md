@@ -6,19 +6,19 @@ The bot lets your viewers enter levelcodes for you to try, and automatically syn
 
 ## Commands
 **Streamer Commands**  
-!prev : Sets the index queue to the previous level. Now the current level would be the previous one.  
-!next : Sets the index queue to the next level  
-!current : Shows information about the current level being played  
-!clear : Mark a level as beaten  
-!skip : Mark a level as skipped or not beaten  
+`!prev` : Sets the index queue to the previous level. Now the current level would be the previous one.  
+`!next` : Sets the index queue to the next level  
+`!current` : Shows information about the current level being played  
+`!clear` : Mark a level as beaten  
+`!skip` : Mark a level as skipped or not beaten  
   
 **Viewer Commands**  
-!add [level code] : Adds a level to the viewer level queue  
-!q or !queue : Shows up to 5 next levels in the queue  
-!totalq : Shows the total number of levels in the queue as well as the quantity of levels beaten and unbeaten.
-!cmd : Shows some quick commands for viewers  
-!about : Shows customized message  
-!bot : Shows bot description  
+`!add [level code]` : Adds a level to the viewer level queue  
+`!q` or `!queue` : Shows up to 5 next levels in the queue  
+`!totalq` : Shows the total number of levels in the queue as well as the quantity of levels beaten and unbeaten.
+`!cmd` : Shows some quick commands for viewers  
+`!about` : Shows customized message  
+`!bot` : Shows bot description  
 
 ## Want to add or edit commands?
 Well JavaScript is easy to learn and here you have the source code. So... you now have it all. Although forking the git and then helping us make the bot even better would be nice, you can just keep your changes to yourself. Just have fun!
