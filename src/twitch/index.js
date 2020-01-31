@@ -124,8 +124,10 @@ const client = tmi.Client(options);
 					if (args[1].length !== 7) {
 						throw 'Level codes are 7 characters long!';
 					}
-					let levelId = args[1];
-					let levelInfo = await rce.levelhead.levels.search({ levelIds: levelId, includeAliases: true })[0];
+					let levelInfo = await rce.levelhead.levels.search(
+						{ levelIds: args[1], includeAliases: true },
+						{ doNotUseKey: true }
+					)[0];
 					let viewerLevel = new ViewerLevel(
 						levelInfo.levelId,
 						levelInfo.title,
@@ -137,7 +139,10 @@ const client = tmi.Client(options);
 						throw 'Level does not exist!';
 					}
 					queue.push(viewerLevel);
-					client.action(twitchChannel, `Level '${viewerLevel.levelName}'@${viewerLevel.levelId}`);
+					client.action(
+						twitchChannel,
+						`Level '${viewerLevel.levelName}'@${viewerLevel.levelId} was added to the queue`
+					);
 				} catch (error) {
 					client.action(twitchChannel, `Invalid level code! ${error}`);
 				}
@@ -196,3 +201,4 @@ class ViewerLevel {
 		this.cleared = false;
 	}
 }
+async function addLevel(levelId) {}

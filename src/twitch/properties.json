@@ -1,8 +1,8 @@
 {
-    "delegationKeyStreamer": "delegationKeyStreamer",
-    "twitchChannel": "twitchChannel",
-    "twitchStreamer": "TwitchStreamer",
-    "username": "TwitchChatBotusername",
-    "password": "TwitchChatBotPassword",
-    "prefix": "!"
+	"delegationKeyStreamer": "delegationKeyStreamer",
+	"twitchChannel": "talk_gibberish",
+	"twitchStreamer": "Talk_gibberish",
+	"username": "LevelheadShenanibot",
+	"password": "oauth:ptx38gb1xhu4nuiz2e51jnlr4uc33d",
+	"prefix": "!"
 }
