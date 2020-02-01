@@ -31,7 +31,7 @@ const options = {
 };
 
 let queuePosition = 0;
-let queueOpen = false;
+let queueOpen = true;
 let queue = [];
 
 const rce = new rumpus.RumpusCE(streamerKey);
@@ -74,10 +74,16 @@ const client = tmi.Client(options);
 						if (queue.length < 1) {
 							throw 'There are no levels in the queue!';
 						}
-						queue[queuePosition].cleared = true;
-						client.action(twitchChannel, 'Level Cleared!');
+						if (queue.length - 1 < queuePosition) {
+							throw 'You are at the end of the queue';
+						}
+						queue[queuePosition++].cleared = true;
+						client.action(
+							twitchChannel,
+							`Level Cleared! Now playing ${queue[queuePosition].levelName}@${queue[queuePosition].levelId}`
+						);
 					} catch (error) {
-						client.action(twitchChannel, 'Error! ');
+						client.action(twitchChannel, `Error! ${error}`);
 					}
 					break;
 				case 'skip':
@@ -85,10 +91,16 @@ const client = tmi.Client(options);
 						if (queue.length < 1) {
 							throw 'There are no levels in the queue!';
 						}
-						queue[queuePosition].cleared = false;
-						client.action(twitchChannel, 'Level Skipped!');
+						if (queue.length - 1 < queuePosition) {
+							throw 'You are at the end of the queue';
+						}
+						queue[queuePosition++].cleared = false;
+						client.action(
+							twitchChannel,
+							`Level Skipped! Now playing ${queue[queuePosition].levelName}@${queue[queuePosition].levelId}`
+						);
 					} catch (error) {
-						client.action(twitchChannel, 'Error! ');
+						client.action(twitchChannel, `Error! ${error}`);
 					}
 					break;
 				case 'next':
@@ -120,34 +132,34 @@ const client = tmi.Client(options);
 
 		switch (command) {
 			case 'add':
-				try {
-					if (args[1].length !== 7) {
-						throw 'Level codes are 7 characters long!';
-					}
-					let levelInfo = await rce.levelhead.levels.search(
-						{ levelIds: args[1], includeAliases: true },
-						{ doNotUseKey: true }
-					)[0];
-					let viewerLevel = new ViewerLevel(
-						levelInfo.levelId,
-						levelInfo.title,
-						levelInfo.alias.alias,
-						levelInfo.alias.userId,
-						twitchUser
-					);
-					if (levelInfo === undefined) {
-						throw 'Level does not exist!';
-					}
-					queue.push(viewerLevel);
-					client.action(
-						twitchChannel,
-						`Level '${viewerLevel.levelName}'@${viewerLevel.levelId} was added to the queue`
-					);
-				} catch (error) {
-					client.action(twitchChannel, `Invalid level code! ${error}`);
+				if (!queueOpen) {
+					client.action(twitchChannel, 'Sorry, queue is closed!');
 				}
+				if (args[1].length !== 7) {
+					client.action(twitchChannel, `${args[1]} is invalid! Levelcodes are 7 characters long!`);
+				}
+				rce.levelhead.levels
+					.search({ levelIds: args[1], includeAliases: true }, { doNotUseKey: true })
+					.then((levelInfo) => {
+						if (levelInfo[0] === undefined) {
+							client.action(twitchChannel, 'Level does not exist!');
+						}
+						let viewerLevel = new ViewerLevel(
+							levelInfo[0].levelId,
+							levelInfo[0].title,
+							levelInfo[0].alias.alias,
+							levelInfo[0].alias.userId,
+							twitchUser
+						);
+						queue.push(viewerLevel);
+						client.action(
+							twitchChannel,
+							`Level '${viewerLevel.levelName}'@${viewerLevel.levelId} was added to the queue`
+						);
+					});
 				break;
-			case 'queue' || 'q':
+			case 'q':
+			case 'queue':
 				try {
 					if (queue.length < 1) {
 						throw 'The queue is empty, add some levels to it!';
@@ -179,10 +191,9 @@ const client = tmi.Client(options);
 				);
 				break;
 			case 'bot':
-				client.action(twitchChannel, 'This bot was created for the LevelHead Community by jajdp and FantasmicGalaxy');
 				client.action(
 					twitchChannel,
-					'Want to use it in your own stream? You can get it here: https://github.com/jajdp/Shenanibot-public'
+					'This bot was created for the LevelHead Community by jajdp and FantasmicGalaxy. Want to use it in your own stream? You can get it here: https://github.com/jajdp/Shenanibot-public'
 				);
 				break;
 			default:

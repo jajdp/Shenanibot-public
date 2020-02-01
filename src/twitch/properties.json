@@ -1,8 +1,8 @@
 {
 	"delegationKeyStreamer": "delegationKeyStreamer",
-	"twitchChannel": "talk_gibberish",
-	"twitchStreamer": "Talk_gibberish",
+	"twitchChannel": "eedefeed",
+	"twitchStreamer": "fantasmicgalaxy",
 	"username": "LevelheadShenanibot",
 	"password": "oauth:ptx38gb1xhu4nuiz2e51jnlr4uc33d",
-	"prefix": "!"
+	"prefix": "$"
 }
