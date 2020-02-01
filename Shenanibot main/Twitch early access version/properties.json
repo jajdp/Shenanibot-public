@@ -1,7 +1,0 @@
-{
-    "delegationKeyStreamer" : "delegationKeyStreamer",
-    "twitchChannel" : "twitchChannel",
-    "TwitchStreamer" : "TwitchStreamer",
-    "username" : "TwitchChatBotusername",
-    "password" : "TwitchChatBotPassword"
-}
