@@ -111,7 +111,7 @@ const client = tmi.Client(options);
 						queuePosition++;
 						client.action(twitchChannel, 'Next level...');
 					} catch (error) {
-						client.action(twitchChannel, 'Error! ');
+						client.action(twitchChannel, 'Error! ${error}');
 					}
 					break;
 				case 'prev':
@@ -122,7 +122,7 @@ const client = tmi.Client(options);
 						queuePosition++;
 						client.action(twitchChannel, 'Previous level...');
 					} catch (error) {
-						client.action(twitchChannel, 'Error! ');
+						client.action(twitchChannel, 'Error! ${error}');
 					}
 					break;
 				default:
