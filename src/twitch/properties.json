@@ -1,8 +1,8 @@
 {
-	"delegationKeyStreamer": "Q3ZRiGXxmF6lg0DS",
-	"twitchChannel": "ultimateisrdy",
-	"twitchStreamer": "UltimateisRDY",
-	"username": "KommSusserBot",
-	"password": "oauth:bslowihcqdhgb2a62cjm5xfp1424we",
-	"prefix": "!"
+	"delegationKeyStreamer": "delegationKeyStreamer",
+	"twitchChannel": "eedefeed",
+	"twitchStreamer": "fantasmicgalaxy",
+	"username": "LevelheadShenanibot",
+	"password": "oauth:ptx38gb1xhu4nuiz2e51jnlr4uc33d",
+	"prefix": "$"
 }

@@ -83,7 +83,7 @@ const client = tmi.Client(options);
 							`Level Cleared! Now playing ${queue[queuePosition].levelName}@${queue[queuePosition].levelId}`
 						);
 					} catch (error) {
-						client.action(twitchChannel, `${error}`);
+						client.action(twitchChannel, `Error! ${error}`);
 					}
 					break;
 				case 'skip':
@@ -100,18 +100,18 @@ const client = tmi.Client(options);
 							`Level Skipped! Now playing ${queue[queuePosition].levelName}@${queue[queuePosition].levelId}`
 						);
 					} catch (error) {
-						client.action(twitchChannel, `${error}`);
+						client.action(twitchChannel, `Error! ${error}`);
 					}
 					break;
 				case 'next':
 					try {
 						if (queue.length - 1 < queuePosition) {
-							throw ': You are at the end of the queue';
+							throw 'You are at the end of the queue';
 						}
 						queuePosition++;
 						client.action(twitchChannel, 'Next level...');
 					} catch (error) {
-						client.action(twitchChannel, '');
+						client.action(twitchChannel, 'Error! ${error}');
 					}
 					break;
 				case 'prev':
@@ -122,7 +122,7 @@ const client = tmi.Client(options);
 						queuePosition++;
 						client.action(twitchChannel, 'Previous level...');
 					} catch (error) {
-						client.action(twitchChannel, '');
+						client.action(twitchChannel, 'Error! ${error}');
 					}
 					break;
 				default:
@@ -134,32 +134,28 @@ const client = tmi.Client(options);
 			case 'add':
 				if (!queueOpen) {
 					client.action(twitchChannel, 'Sorry, queue is closed!');
-					break;
 				}
 				if (args[1].length !== 7) {
 					client.action(twitchChannel, `${args[1]} is invalid! Levelcodes are 7 characters long!`);
-					break;
 				}
 				rce.levelhead.levels
 					.search({ levelIds: args[1], includeAliases: true }, { doNotUseKey: true })
 					.then((levelInfo) => {
 						if (levelInfo[0] === undefined) {
 							client.action(twitchChannel, 'Level does not exist!');
-						}else{
-							let viewerLevel = new ViewerLevel(
-								levelInfo[0].levelId,
-								levelInfo[0].title,
-								levelInfo[0].alias.alias,
-								levelInfo[0].alias.userId,
-								twitchUser
-							);
-							queue.push(viewerLevel);
-							client.action(
-								twitchChannel,
-								`Level '${viewerLevel.levelName}'@${viewerLevel.levelId} was added to the queue`
-							);
 						}
-						
+						let viewerLevel = new ViewerLevel(
+							levelInfo[0].levelId,
+							levelInfo[0].title,
+							levelInfo[0].alias.alias,
+							levelInfo[0].alias.userId,
+							twitchUser
+						);
+						queue.push(viewerLevel);
+						client.action(
+							twitchChannel,
+							`Level '${viewerLevel.levelName}'@${viewerLevel.levelId} was added to the queue`
+						);
 					});
 				break;
 			case 'q':
@@ -175,18 +171,11 @@ const client = tmi.Client(options);
 					}
 					client.action(twitchChannel, response);
 				} catch (error) {
-					client.action(twitchChannel, `${error}`);
+					client.action(twitchChannel, `Error! ${error}`);
 				}
 				break;
 			case 'totalq':
-				try {
-					if (queue.length < 1) {
-						throw 'The queue is empty, add some levels to it!';
-					}
-					client.action(twitchChannel, `Queue length: ${queue.length - queuePosition + 1}`);
-				} catch (error) {
-					client.action(twitchChannel, `${error}`);
-				}
+				client.action(twitchChannel, `Queue length: ${queue.length - queuePosition + 1}`);
 				break;
 			case 'current':
 				let viewerLevel = queue[queuePosition];
