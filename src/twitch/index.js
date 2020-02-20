@@ -2,17 +2,15 @@ const fs = require('fs');
 const tmi = require('tmi.js');
 const rumpus = require('@bscotch/rumpus-ce');
 
-const buffer = fs.readFileSync(__dirname + '/properties.json');
-const parsed = JSON.parse(buffer.toString());
-
-const streamerKey = parsed.delegationKeyStreamer;
-const twitchChannel = parsed.twitchChannel;
-const twitchStreamer = parsed.twitchStreamer;
-const prefix = parsed.prefix;
+const streamerKey = process.env.STREAMER_DELEGATION_KEY ? process.env.STREAMER_DELEGATION_KEY : '';
+const twitchChannel = process.env.TWITCH_CHANNEL;
+const twitchStreamer = process.env.STREAMER_USERNAME;
+const prefix = process.env.PREFIX ? process.env.PREFIX : '!';
 
 // TODO
-// Create a utils file
-// Add the actual functionality to the commands
+// Create a commands file, and a utils file
+// Test the new .env stuff
+
 // Rumpus CE Package Docs: https://github.com/bscotch/rumpus-ce
 
 const options = {
@@ -24,8 +22,8 @@ const options = {
 		reconnect: true
 	},
 	identity: {
-		username: parsed.username,
-		password: parsed.password
+		username: process.env.BOT_USERNAME,
+		password: process.env.OAUTH_TOKEN
 	},
 	channels: [ twitchChannel ]
 };
