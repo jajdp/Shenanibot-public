@@ -21,7 +21,7 @@ The bot stores a list of viewer-submitted levelcodes for you to play, ~~and auto
 `!bot` : Shows bot description  
 
 ## Want to add or edit commands?
-Feel free to fork or clone the bot, and change it however you like! Feel free to contribute to the bot, it's opensource after all!  
+Feel free to fork or clone the bot, and change it however you like! Feel free to contribute to the bot, it's open-source after all!  
 
 
 # Bot Setup
@@ -84,7 +84,7 @@ This parameter lets you customize what the symbol that denotes a command. For ex
 `PREFIX="$"`
 
 ### Results
-The final file should now look something like this: (**Note:** It does **not** matter what order the parameters are in)
+The final file should now look something like this: (**Note:** It does **not** matter what order the parameters are in)  
 **Make sure to then rename the file to `.env`, or else it will not work!**
 
 ```
