@@ -1,27 +1,27 @@
-# Shenanibot-public
-Shenanibot is a free twitch chat bot developed for streamers playing LevelHead. Its purpose is to help streamers manage their level queues.
+# Shenanibot
+The Shenanibot is a free twitch chat bot developed to help streamers manage a queue of viewer-chosen levels for the Butterscotch Shenanigans game [Levelhead](https://bscotch.net/games/levelhead)
 
-## Sooo... what does it do?
-The bot lets your viewers enter levelcodes for you to try, and automatically syncs them to your bookmarks directly in LevelHead, so that you don't have to type them in!
+## What does it do?
+The bot stores a list of viewer-submitted levelcodes for you to play, ~~and automatically syncs them to your bookmarks directly in LevelHead~~ (not yet, but soon! It'll let you copy/paste the levelcodes though), so that you don't have to type them in!
 
 ## Commands
 **Streamer Commands**  
-`!prev` : Sets the index queue to the previous level. Now the current level would be the previous one.  
-`!next` : Sets the index queue to the next level  
+`!prev` : Moves the queue back a level  
+`!next` : Moves the queue forward a level  
 `!current` : Shows information about the current level being played  
-`!clear` : Mark a level as beaten  
-`!skip` : Mark a level as skipped or not beaten  
+`!complete` : Mark a level as beaten and move to the next level  
+`!skip` : Mark a level as skipped or not beaten and move to the next level in the queue  
   
 **Viewer Commands**  
-`!add [level code]` : Adds a level to the viewer level queue  
+`!add [level code]` : Adds a level to the level queue  
 `!q` or `!queue` : Shows up to 5 next levels in the queue  
-`!totalq` : Shows the total number of levels in the queue as well as the quantity of levels beaten and unbeaten.
+`!totalq` : Shows the total number of levels in the queue as well as how many levels have been completed or skipped  
 `!cmd` : Shows some quick commands for viewers  
 `!about` : Shows customized message  
 `!bot` : Shows bot description  
 
 ## Want to add or edit commands?
-Well JavaScript is easy to learn and here you have the source code. So... you now have it all. Although forking the git and then helping us make the bot even better would be nice, you can just keep your changes to yourself. Just have fun!
+Feel free to fork or clone the bot, and change it however you like! Feel free to contribute to the bot, it's opensource after all!  
 
 
 # Bot Setup
@@ -40,73 +40,83 @@ In order to run the chatbot, you will need to download Node.js, which you can do
 
 Next, you will have to download the code for the bot. Click on the green button at the top of this screen that says *'Clone or download'*, then click on *'Download as zip'*
 
-Now you need to locate the file "properties.json" (It's under src/twitch/properties.json). Once you have it, open it with your text editor of choice, then you will need to fill those fields with the following information:
+Now you need to locate the file `config.example.env` (It's under `src/twitch/config.example.env` in the project directory). Once you have it, open it with your text editor of choice, then you will need to fill those fields with the following information:
 
 ## Parameters
 
-### Delegation Key
-You will need a delegation key from your own LEVELHEAD account with the following permissions:
+### Delegation Key (optional)
+**Note:** You do not need a delegation key if you don't want the levels to be automatically bookmarked, in that case, delete the parameter  
+
+You will need a delegation key from your own [Levelhead account](https://www.bscotch.net/account) with the following permissions:
     -View own and others' Levelhead data (levels, profiles, aliases, etc).
     -View, add, and delete own Levelhead level bookmarks.
-After you have generated it, copy it, and paste it in the 'delegationKeyStreamer' parameter of the json file. eg.
-"delegationKeyStreamer": "yourDelegationKeyHere";
+After you have generated it, copy it, and paste it in the `STREAMER_DELEGATION_KEY` parameter of the `.env` file. eg.  
+
+`STREAMER_DELEGATION_KEY="blahblahblahblah"`
 
 ### Twitch Streamer Channel Name
-On your own channel https://www.twitch.tv/channelName
-get the last part that says "channelName" and paste it into the "twitchChannel" parameter eg.
-"twitchChannel": "channelName"
+On your own channel https://www.twitch.tv/channelName, get the last part that says "channelName" and paste it into the `TWITCH_CHANNEL` parameter eg.  
+
+`TWITCH_CHANNEL="someLevelheadStreamer"`
 
 ### Twitch Streamer Channel Username
-On your own channel write something in the chat and copy your Twitch username displayed like this:
+On your own channel, write something in the chat and copy your Twitch username displayed like this:
 
-TwitchDisplayUserName: hey what's up?
+`TwitchDisplayUserName: hey what's up?`
 
-"TwitchDisplayUserName" would be your display UserName then paste it into the "twitchStreamer" parameter eg.
-"twitchStreamer": "TwitchDisplayUserName"
+"TwitchDisplayUserName" would be your display username, then paste it into the `STREAMER_USERNAME` parameter eg.  
+
+`STREAMER_USERNAME="someTwitchUsername"`
 
 ### Twitch Bot Username and Password
-Here's the part where we will need the second twitch account we specified in the MATERIALS section. 
-This account will be the account of the bot.
-The chatbot will take full control of this twitch account, so you are better just creating a new twitch account just for your bot. 
-Please do not use your own streaming account, you've been warned.
-Once you have the second twitch account ready. You will need its username (username you use to log in) and OAuth password. 
-You can get the OAuth password by going to this link:
-https://twitchapps.com/tmi/ and letting the website get permissions for the account you are planning to use as a chatbot.
-Once you have this information, just copy and paste it into the "properties.json" file like below:
+This is the part where you need a second Twitch account, make sure that you don't do it on your streaming account!
 
-"username": "KommSusserBot"
-"password": "oauth:bslowihcqdhgb2a62cjm5xfp1424we"
+You can get the OAuth token by going to https://twitchapps.com/tmi/, and accepting the permissions **on the bot account!**  
+Copy the token that it gives you, and **do not share it with anybody!**
+Once you have the information, just paste them into the `BOT_USERNAME` and `OAUTH_TOKEN` parameters eg.
 
-### Prefix
-This parameter lets you customize what the symbol are in front of your commands. For example in `!add`, the `!` is the prefix to your command
+`BOT_USERNAME="LevelheadBot"`
+`OAUTH_TOKEN="123123123123131231231"`
+
+### Prefix (optional, default: "!")
+This parameter lets you customize what the symbol that denotes a command. For example in `!add`, the `!` is the prefix to your command. Just choose what you want the prefix to be, and fill out the parameter `PREFIX` eg.
+
+`PREFIX="$"`
+
+### Results
+The final file should now look something like this: (**Note:** It does **not** matter what order the parameters are in)
+**Make sure to then rename the file to `.env`, or else it will not work!**
+
+```
+STREAMER_DELEGATION_KEY="blahblahblahblah"
+TWITCH_CHANNEL="someLevelheadStreamer"
+STREAMER_USERNAME="someTwitchUsername"
+PREFIX="!"
+BOT_USERNAME="LevelheadBot"
+OAUTH_TOKEN="123123123123131231231"
+```
 
 ## Installing Project Dependencies
-Next, you'll need to open your computer's terminal, and navigate to where the package.json file is located. You can ask someone on the Discord how to do that, (or just look up how to do it)
-
-Locate the file index.js inside the Shenanibot project and copy the route to where that file is located.
-(Example: C:\My_User\Documents\Shenanibot-public\Shenanibot main\Twitch early access version)
-
-Then open a cmd window (TERMINAL if you are in Linux or Mac). We need the cmd window to point to the location where our file index.js is. For that we will use the command 'cd [route]'
-(You can open the terminal on Windows by pressing 'Window Key + R')
-(Example: cd C:\My_User\Documents\Shenanibot-public\"Shenanibot main"\"Twitch early access version")
-Notice that if your route has a name with an space between words, you will need to encapsule the whole folder name between quotes like it's shown in the example on the folder name "Twitch early access version" (Windows only)
-
-After you are in that route, just execute the following command to install the dependencies of the program:
+Next, you'll need to open your computer's terminal, and navigate to the project directory (Example: `C:\My_User\Documents\Shenanibot-public`). Just look up how to do it, or you can ask on the Discord how to do it.  
+You can open the terminal on Windows by pressing "Window Key + R", then typing in `cmd`  
+Once you are in the directory/folder, you can install the project dependencies by typing:  
 
 `npm install`
 
 If you are curious about what you are installing, here's a list of the project dependencies:
 + RumpusCE Node Package, https://github.com/bscotch/rumpus-ce
 + TMI.js, https://github.com/tmijs/tmi.js
++ DotEnv, https://www.npmjs.com/package/dotenv
++ Axios, https://www.npmjs.com/package/axios
 
 # Running the Bot
-Each time you run the bot, you'll have to naviagate in the terminal to where the package.json file is located, then type:
+Each time you run the bot, you'll have to naviagate in the terminal to the root of the project (where the package.json is located) and type:  
 
 `node .`
 
 Then the terminal window will show the connection process to your Twitch channel and greets you with "Bot Online!"
 
 ## Lastly...
-Feel free to study JavaScript and understand the code behind the shenanibot. Make sure to edit and modify it as much as you need or want. And if you change it, feel free to help us make the bot better by sharing your code with us. Cheers!
+Feel free to study JavaScript and understand the code behind the Shenanibot. Make sure to edit and modify it as much as you need or want. And if you change it, feel free to help us make the bot better by sharing your code with us. Cheers!
 
-and shoutouts to Cprice for the RumpusAPI script... and the BS brothers for such a fantastic game!
+and shoutouts to the BS brothers for such a fantastic game!

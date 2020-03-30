@@ -1,6 +1,7 @@
 const fs = require('fs');
 const tmi = require('tmi.js');
 const rumpus = require('@bscotch/rumpus-ce');
+require('dotenv').config();
 
 const streamerKey = process.env.STREAMER_DELEGATION_KEY ? process.env.STREAMER_DELEGATION_KEY : '';
 const twitchChannel = process.env.TWITCH_CHANNEL;
@@ -9,7 +10,6 @@ const prefix = process.env.PREFIX ? process.env.PREFIX : '!';
 
 // TODO
 // Create a commands file, and a utils file
-// Test the new .env stuff
 
 // Rumpus CE Package Docs: https://github.com/bscotch/rumpus-ce
 
@@ -67,7 +67,7 @@ const client = tmi.Client(options);
 					queueOpen = true;
 					client.action(twitchChannel, 'The queue has been opened! Add some levels to it!');
 					break;
-				case 'clear':
+				case 'complete':
 					try {
 						if (queue.length < 1) {
 							throw 'There are no levels in the queue!';
@@ -210,4 +210,3 @@ class ViewerLevel {
 		this.cleared = false;
 	}
 }
-async function addLevel(levelId) {}
