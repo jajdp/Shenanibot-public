@@ -68,7 +68,7 @@ On your own channel, write something in the chat and copy your Twitch username d
 
 `STREAMER_USERNAME="someTwitchUsername"`
 
-### Twitch Bot Username and Password
+### Twitch Bot Username and OAuth Token
 This is the part where you need a second Twitch account, make sure that you don't do it on your streaming account!
 
 You can get the OAuth token by going to https://twitchapps.com/tmi/, and accepting the permissions **on the bot account!**  
