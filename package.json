@@ -1,0 +1,31 @@
+{
+  "name": "shenanibot-public",
+  "version": "1.0.0",
+  "description": "A Twitch bot that helps with managing a queue of levels for Levelhead streamers",
+  "main": "src/twitch/index.js",
+  "dependencies": {
+    "@bscotch/rumpus-ce": "^1.1.0",
+    "axios": "^0.19.2",
+    "dotenv": "^8.2.0",
+    "tmi.js": "^1.5.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jajdp/Shenanibot-public.git"
+  },
+  "keywords": [
+    "levelhead",
+    "twitch",
+    "bot"
+  ],
+  "author": "Jajdp",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jajdp/Shenanibot-public/issues"
+  },
+  "homepage": "https://github.com/jajdp/Shenanibot-public#readme"
+}
