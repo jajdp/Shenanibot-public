@@ -79,6 +79,8 @@ const client = tmi.Client(options);
           queue[position].cleared = true;
           if (!checkEndOfQueue(client, queue, position)) position++;
 
+          rce.levelhead.bookmarks.remove(queue[position].levelId);
+
           client.say(
             channel,
             `Level completed! Now playing ${queue[position].levelName}@${queue[position].levelId} submitted by ${queue[position].submittedBy}`
@@ -90,6 +92,8 @@ const client = tmi.Client(options);
           queue[position].cleared = false;
           if (!checkEndOfQueue(client, queue, position)) position++;
 
+          rce.levelhead.bookmarks.remove(queue[position].levelId);
+
           client.say(
             channel,
             `Level skipped! Now playing ${queue[position].levelName}@${queue[position].levelId} submitted by ${queue[position].submittedBy}`
@@ -99,13 +103,13 @@ const client = tmi.Client(options);
           if (checkEndOfQueue(client, queue, position)) return;
 
           position++;
-          client.say(channel, 'Next level...');
+          client.say(channel, `Next level... Now playing ${queue[position].levelName}@${queue[position].levelId} submitted by ${queue[position].submittedBy}`);
           break;
         case 'prev':
           if (checkStartOfQueue(client, queue, position)) return;
 
           position--;
-          client.say(channel, 'Previous level...');
+          client.say(channel, `Previous level... Now playing ${queue[position].levelName}@${queue[position].levelId} submitted by ${queue[position].submittedBy}`);
           break;
       }
     }
@@ -126,6 +130,7 @@ const client = tmi.Client(options);
             if (levelInfo[0] === undefined) {
               client.say(channel, 'Oops! Level does not exist!');
             }
+
             let viewerLevel = new ViewerLevel(
               levelInfo[0].levelId,
               levelInfo[0].title,
@@ -133,6 +138,8 @@ const client = tmi.Client(options);
               levelInfo[0].alias.userId,
               twitchUser
             );
+            rce.levelhead.bookmarks.add(viewerLevel.levelId);
+
             queue.push(viewerLevel);
             client.say(
               channel,
