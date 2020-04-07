@@ -1,4 +1,3 @@
-const fs = require('fs');
 const tmi = require('tmi.js');
 const rumpus = require('@bscotch/rumpus-ce');
 require('dotenv').config();
