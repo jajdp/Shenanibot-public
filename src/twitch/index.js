@@ -8,11 +8,6 @@ const channel = process.env.TWITCH_CHANNEL;
 const streamer = process.env.STREAMER_USERNAME;
 const prefix = process.env.PREFIX ? process.env.PREFIX : '!';
 
-// TODO
-// Create a commands file, and a utils file
-// Customize error messages
-// Check for edge cases like end of queue, ect.
-
 // Rumpus CE SDK Docs: https://github.com/bscotch/rumpus-ce
 
 const options = {
@@ -34,8 +29,8 @@ const rce = new rumpus.RumpusCE(delegationToken);
 const client = tmi.Client(options);
 const shenanibot = new bot(client, rce, {
 	channel: channel,
-	streamer: 'fantasmicgalaxy',
-	prefix: '!'
+	streamer: streamer,
+	prefix: prefix
 });
 
 (async function main() {
