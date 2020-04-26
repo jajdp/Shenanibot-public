@@ -26,7 +26,7 @@ const options = {
 
 const rce = new rumpus.RumpusCE(delegationToken);
 const client = tmi.Client(options);
-const shenanibot = new bot(client, rce, {
+const shenanibot = new bot(rce, {
   channel: channel,
   streamer: streamer,
   prefix: prefix
@@ -43,6 +43,6 @@ const shenanibot = new bot(client, rce, {
   client.on('chat', async (channel, user, message, self) => {
     if (self) return;
 
-    shenanibot.command(message, user.username);
+    client.say(channel, shenanibot.command(message, user.username));
   });
 })();
