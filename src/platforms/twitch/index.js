@@ -43,6 +43,10 @@ const shenanibot = new bot(rce, {
   client.on('chat', async (channel, user, message, self) => {
     if (self) return;
 
-    client.say(channel, shenanibot.command(message, user.username));
+    help = async () => {
+      let response = await shenanibot.command(message, user.username);
+      client.say(channel, response);
+    }
+    help();
   });
 })();

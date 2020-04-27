@@ -12,11 +12,11 @@ class ShenaniBot {
       };
     this.queue = [];
     this.position = 0;
-    this.queueOpen = false;
+    this.queueOpen = true;
   }
 
-  command(command, username) {
-    if (!command.startsWith(this.options.prefix)) return;
+  async command(command, username) {    
+    if (!command.startsWith(this.options.prefix)) return '';
     command = command.substring(this.options.prefix.length).split(' ');
 
     if (username === this.options.streamer) {
@@ -133,7 +133,7 @@ class ShenaniBot {
     return response;
   }
 
-  addLevelToQueue(levelId, username) {
+  async addLevelToQueue(levelId, username) {
     if (!this.queueOpen) {
       let response = 'Sorry, queue is closed!';
       return response;
@@ -142,24 +142,21 @@ class ShenaniBot {
       let response = `${levelId} is not a valid level code, they're 7 characters long!`;
       return response;
     }
+    
+    let levelInfo = await this.rce.levelhead.levels.search({ levelIds: levelId, includeAliases: true }, { doNotUseKey: true });
+    
+    let level = new viewerLevel(
+      levelInfo[0].levelId,
+      levelInfo[0].title,
+      levelInfo[0].alias.alias,
+      levelInfo[0].alias.userId,
+      username
+    );
+    this.rce.levelhead.bookmarks.add(level.levelId);
+    this.queue.push(level);
 
-    this.rce.levelhead.levels
-      .search({ levelIds: levelId, includeAliases: true }, { doNotUseKey: true })
-      .then((levelInfo) => {
-
-        let level = new viewerLevel(
-          levelInfo[0].levelId,
-          levelInfo[0].title,
-          levelInfo[0].alias.alias,
-          levelInfo[0].alias.userId,
-          username
-        );
-        this.rce.levelhead.bookmarks.add(level.levelId);
-        this.queue.push(level);
-
-        let response = `${level.levelName}@${level.levelId} was added to the queue!`;
-        return response;
-      });
+    let response = `${level.levelName}@${level.levelId} was added to the queue!`;
+    return response;
   }
   showQueue() {
     if (this.checkQueueEmpty()) {
