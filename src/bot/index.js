@@ -4,12 +4,6 @@ class ShenaniBot {
   constructor(rce, botOptions) {
     this.rce = rce;
     this.options = botOptions
-      ? botOptions
-      : {
-        channel: '',
-        streamer: '',
-        prefix: '!'
-      };
     this.queue = [];
     this.position = 0;
     this.queueOpen = true;

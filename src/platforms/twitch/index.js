@@ -1,14 +1,7 @@
 const tmi = require('tmi.js');
 const rumpus = require('@bscotch/rumpus-ce');
-const bot = require('../../bot/index');
-require('dotenv').config();
-
-const delegationToken = process.env.STREAMER_DELEGATION_KEY ? process.env.STREAMER_DELEGATION_KEY : '';
-const channel = process.env.TWITCH_CHANNEL;
-const streamer = process.env.STREAMER_USERNAME;
-const prefix = process.env.PREFIX ? process.env.PREFIX : '!';
-
-// Rumpus CE SDK Docs: https://github.com/bscotch/rumpus-ce
+const ShenaniBot = require('../../bot/index');
+const env = require('../../options');
 
 const options = {
   options: {
@@ -18,35 +11,31 @@ const options = {
     reconnect: true
   },
   identity: {
-    username: process.env.BOT_USERNAME,
-    password: process.env.OAUTH_TOKEN
+    username: env.auth.botUsername,
+    password: env.auth.oauthToken
   },
-  channels: [channel]
+  channels: [env.auth.channel]
 };
 
-const rce = new rumpus.RumpusCE(delegationToken);
+const rce = new rumpus.RumpusCE(env.auth.delegationToken);
 const client = tmi.Client(options);
-const shenanibot = new bot(rce, {
-  channel: channel,
-  streamer: streamer,
-  prefix: prefix
-});
+const shenanibot = new ShenaniBot(rce, env.config);
 
 (async function main() {
   // Connect bot to server
   client.connect();
-
+  console.log('Don\'t worry if it says \'Error: No response from twitch\', it should still work!');
+  
   client.on('connected', (address, port) => {
-    client.action(channel, 'Bot Connected!');
+    client.action(env.auth.channel, 'Bot Connected!');
   });
 
   client.on('chat', async (channel, user, message, self) => {
     if (self) return;
 
-    help = async () => {
+    (async function command() {
       let response = await shenanibot.command(message, user.username);
-      client.say(channel, response);
-    }
-    help();
+      client.say(env.auth.channel, response);
+    })();
   });
 })();
