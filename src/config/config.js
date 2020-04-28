@@ -4,6 +4,7 @@ require('dotenv').config();
 const botUsername = process.env.BOT_USERNAME;
 const oauthToken = process.env.OAUTH_TOKEN;
 const channel = process.env.CHANNEL;
+const streamer = process.env.STREAMER;
 const delegationToken = process.env.DELEGATION_TOKEN;
 
 const prefix = process.env.PREFIX || '!';
@@ -13,6 +14,7 @@ module.exports = {
     botUsername,
     oauthToken,
     channel,
+    streamer,
     delegationToken
   },
   config: {
