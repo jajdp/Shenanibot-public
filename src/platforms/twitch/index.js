@@ -1,7 +1,6 @@
-const tmi = require('tmi.js');
-const rumpus = require('@bscotch/rumpus-ce');
+const TMI = require('tmi.js');
 const ShenaniBot = require('../../bot/index');
-const env = require('../../options');
+const env = require('../../config/config');
 
 const options = {
   options: {
@@ -17,9 +16,8 @@ const options = {
   channels: [env.auth.channel]
 };
 
-const rce = new rumpus.RumpusCE(env.auth.delegationToken);
-const client = tmi.Client(options);
-const shenanibot = new ShenaniBot(rce, env.config);
+const client = TMI.Client(options);
+const shenanibot = new ShenaniBot(env);
 
 (async function main() {
   // Connect bot to server

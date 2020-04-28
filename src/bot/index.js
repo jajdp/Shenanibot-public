@@ -1,9 +1,10 @@
-let viewerLevel = require('./lib/level');
+const Rumpus = require('@bscotch/rumpus-ce');
+const ViewerLevel = require('./lib/level');
 
 class ShenaniBot {
-  constructor(rce, botOptions) {
-    this.rce = rce;
-    this.options = botOptions
+  constructor(botOptions) {
+    this.rce = new Rumpus.RumpusCE(botOptions.auth.delegationToken);
+    this.options = botOptions.config;
     this.queue = [];
     this.position = 0;
     this.queueOpen = true;
@@ -139,7 +140,7 @@ class ShenaniBot {
     
     let levelInfo = await this.rce.levelhead.levels.search({ levelIds: levelId, includeAliases: true }, { doNotUseKey: true });
     
-    let level = new viewerLevel(
+    let level = new ViewerLevel(
       levelInfo[0].levelId,
       levelInfo[0].title,
       levelInfo[0].alias.alias,
