@@ -2,7 +2,7 @@
 The Shenanibot is a free twitch chat bot developed to help streamers manage a queue of viewer-chosen levels for the Butterscotch Shenanigans game [Levelhead](https://bscotch.net/games/levelhead)
 
 ## What does it do?
-The bot stores a list of viewer-submitted levelcodes for you to play, ~~and automatically syncs them to your bookmarks directly in LevelHead~~ (not yet, but soon! It'll let you copy/paste the levelcodes though), so that you don't have to type them in!
+The bot stores a list of viewer-submitted levelcodes for you to play, and automatically syncs them to your bookmarks directly in LevelHead, so that you don't have to type them in and keep track of them!
 
 ## Commands
 **Streamer Commands**  
