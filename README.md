@@ -44,9 +44,7 @@ Now you need to locate the file `config.example.env` (It's under `src/twitch/con
 
 ## Parameters
 
-### Delegation Key (optional)
-**Note:** You do not need a delegation key if you don't want the levels to be automatically bookmarked, in that case, delete the line that the parameter is on  
-
+### Delegation Key
 You will need a delegation key from your own [Levelhead account](https://www.bscotch.net/account) with the following permissions:
     -View own and others' Levelhead data (levels, profiles, aliases, etc).
     -View, add, and delete own Levelhead level bookmarks.
