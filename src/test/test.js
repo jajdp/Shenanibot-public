@@ -4,5 +4,5 @@ const botOptions = require('../config/config');
 const bot = new ShenaniBot(botOptions);
 
 (async function test() {
-  console.log(await bot.command('!help', true));
+  console.log(await bot.command('!help', 'fantasmicgalaxy'));
 })();

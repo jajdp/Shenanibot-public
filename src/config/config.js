@@ -8,6 +8,7 @@ const streamer = process.env.STREAMER;
 const delegationToken = process.env.DELEGATION_TOKEN;
 
 const prefix = process.env.PREFIX || '!';
+const levelLimit = process.env.LEVEL_LIMIT || '!';
 
 module.exports = {
   auth: {
@@ -18,6 +19,7 @@ module.exports = {
     delegationToken
   },
   config: {
-    prefix
+    prefix,
+    levelLimit
   }
 }
