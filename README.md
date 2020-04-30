@@ -40,7 +40,7 @@ In order to run the chatbot, you will need to download Node.js, which you can do
 
 Next, you will have to download the code for the bot. Click on the green button at the top of this screen that says *'Clone or download'*, then click on *'Download as zip'*
 
-Now you need to locate the file `config.example.env` (It's under `src/twitch/config.example.env` in the project directory). Once you have it, open it with your text editor of choice, then you will need to fill those fields with the following information:
+Now you need to locate the file `.env` (It's in the root of the project, like where the README and package.json files are). Once you have it, open it with your text editor of choice, then you will need to fill those fields with the following information:
 
 ## Parameters
 
