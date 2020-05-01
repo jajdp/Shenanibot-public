@@ -40,6 +40,7 @@ Next, you will have to download the code for the bot. Click on the green button 
 
 Now you need to locate the file `.env` (It's in the root of the project, like where the `package.json` is). Once you have it, open it with your text editor of choice, then you will need to fill those fields with the following information:
 
+
 ## Parameters
 
 ### Delegation Key
