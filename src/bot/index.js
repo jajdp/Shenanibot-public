@@ -5,6 +5,7 @@ class ShenaniBot {
   constructor(botOptions) {
     this.rce = new Rumpus.RumpusCE(botOptions.auth.delegationToken);
     this.options = botOptions.config;
+    this.streamer = botOptions.auth.streamer;
     this.queue = [];
     this.queueOpen = true;
     this.users = {};
@@ -14,7 +15,7 @@ class ShenaniBot {
     if (!command.startsWith(this.options.prefix)) return '';
     command = command.substring(this.options.prefix.length).split(' ');
 
-    if (username === this.options.streamer) {
+    if (username === this.streamer) {
       switch (command[0]) {
         case 'open':
           return this.openQueue();
@@ -75,9 +76,10 @@ class ShenaniBot {
       let response = "There aren't any levels in the queue!";
       return response;
     }
-    let index = Math.round(Math.random() * this.queue.length - 1);
+    let index = Math.round(Math.random() * (this.queue.length - 1));
     let randomLevel = this.queue[index];
-    this.queue = this.queue.splice(index, 1).unshift(randomLevel);
+    this.queue.splice(index, 1)
+    this.queue.unshift(randomLevel);
 
     let response = `Random Level... Now playing ${this.queue[0].levelName}@${this.queue[0].levelId} submitted by ${this.queue[0].submittedBy}`;
     return response;
@@ -92,25 +94,32 @@ class ShenaniBot {
       let response = `${levelId} is not a valid level code, they're 7 characters long!`;
       return response;
     }
-    if (this.users[username].levelsSubmitted >= this.options.levelLimit) {
+    if (this.options.levelLimit > 0 && this.users[username] && this.users[username].levelsSubmitted >= this.options.levelLimit) {
       let response = `Oops, you have submitted the maximum number of levels, so you can't submit any more!`;
       return response;
     }
 
     let levelInfo = await this.rce.levelhead.levels.search({ levelIds: levelId, includeAliases: true }, { doNotUseKey: true });
 
-    let level = new ViewerLevel(
-      levelInfo[0].levelId,
-      levelInfo[0].title,
-      username
-    );
-    this.rce.levelhead.bookmarks.add(level.levelId);
-    this.queue.push(level);
+    try {
+      let level = new ViewerLevel(
+        levelInfo[0].levelId,
+        levelInfo[0].title,
+        username
+      );
+      this.rce.levelhead.bookmarks.add(level.levelId);
+      this.queue.push(level);
 
-    this.users[username] ? this.users[username].levelsSubmitted++ : this.users[username] = { levelsSubmitted: 0 };
+      this.users[username] ? this.users[username].levelsSubmitted++ : this.users[username] = { levelsSubmitted: 1 };
 
-    let response = `${level.levelName}@${level.levelId} was added to the queue! There are ${this.queue.length - 1} levels before yours in the queue`;
-    return response;
+      let response = `${level.levelName}@${level.levelId} was added to the queue! There are ${this.queue.length - 1} levels before yours in the queue.`;
+      response = this.options.levelLimit > 0 ? `${response} You have ${this.options.levelLimit - this.users[username].levelsSubmitted} level submissions left` : response;
+      return response;
+    } catch (error) {
+      let response = 'Oops! That level does not exist!';
+      return response;
+    }
+
   }
   removeLevelFromQueue(levelId, username) {
     if (levelId.length !== 7) {
@@ -123,6 +132,8 @@ class ShenaniBot {
 
       if (level.levelId === levelId) {
         if (level.submittedBy === username) {
+          this.queue.length === 1 ? this.queue = [] : this.queue = this.queue.splice(i, 1);
+
           let response = `${level.levelName}@${level.levelId} was removed from the queue!`;
           return response;
         } else {
@@ -150,7 +161,7 @@ class ShenaniBot {
   }
 
   showBotCommands() {
-    let response = `${this.options.prefix}add [levelcode], ${this.options.prefix}bot, ${this.options.prefix}current, ${this.options.prefix}queue`;
+    let response = `${this.options.prefix}add [levelcode], ${this.options.prefix}bot, ${this.options.prefix}queue`;
     return response;
   }
   showBotInfo() {
