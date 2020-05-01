@@ -22,6 +22,8 @@ class ShenaniBot {
           return this.closeQueue();
         case 'next':
           return this.nextLevel();
+        case 'random':
+          return this.randomLevel();
       }
     }
 
@@ -68,6 +70,19 @@ class ShenaniBot {
     return response;
   }
 
+  randomLevel() {
+    if (this.queue.length === 0) {
+      let response = "There aren't any levels in the queue!";
+      return response;
+    }
+    let index = Math.round(Math.random() * this.queue.length - 1);
+    let randomLevel = this.queue[index];
+    this.queue = this.queue.splice(index, 1).unshift(randomLevel);
+
+    let response = `Random Level... Now playing ${this.queue[0].levelName}@${this.queue[0].levelId} submitted by ${this.queue[0].submittedBy}`;
+    return response;
+  }
+
   async addLevelToQueue(levelId, username) {
     if (!this.queueOpen) {
       let response = 'Sorry, queue is closed!';
@@ -78,7 +93,7 @@ class ShenaniBot {
       return response;
     }
     if (this.users[username].levelsSubmitted >= this.options.levelLimit) {
-      let response = `Oops, you have submitted the maximum number of levels, so can't submit any more!`;
+      let response = `Oops, you have submitted the maximum number of levels, so you can't submit any more!`;
       return response;
     }
 
@@ -94,7 +109,7 @@ class ShenaniBot {
 
     this.users[username] ? this.users[username].levelsSubmitted++ : this.users[username] = { levelsSubmitted: 0 };
 
-    let response = `${level.levelName}@${level.levelId} was added to the queue!`;
+    let response = `${level.levelName}@${level.levelId} was added to the queue! There are ${this.queue.length - 1} levels before yours in the queue`;
     return response;
   }
   removeLevelFromQueue(levelId, username) {
