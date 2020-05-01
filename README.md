@@ -1,23 +1,21 @@
 # Shenanibot
-The Shenanibot is a free twitch chat bot developed to help streamers manage a queue of viewer-chosen levels for the Butterscotch Shenanigans game [Levelhead](https://bscotch.net/games/levelhead)
+The Shenanibot is a free Twitch chatbot developed to help streamers manage a queue of viewer-chosen levels for the Butterscotch Shenanigans game [Levelhead](https://bscotch.net/games/levelhead)
 
 ## What does it do?
 The bot stores a list of viewer-submitted levelcodes for you to play, and automatically syncs them to your bookmarks directly in LevelHead, so that you don't have to type them in and keep track of them!
 
 ## Commands
 **Streamer Commands**  
-`!prev` : Moves the queue back a level  
+`!open` : Opens the queue for viewers to submit levels  
+`!close` : Closes the queue  
 `!next` : Moves the queue forward a level  
-`!current` : Shows information about the current level being played  
-`!complete` : Mark a level as beaten and move to the next level  
-`!skip` : Mark a level as skipped or not beaten and move to the next level in the queue  
+`!random` : Chooses a random level from the queue and puts it at the front of the queue to play
   
 **Viewer Commands**  
 `!add [level code]` : Adds a level to the level queue  
-`!q` or `!queue` : Shows up to 5 next levels in the queue  
-`!totalq` : Shows the total number of levels in the queue as well as how many levels have been completed or skipped  
-`!cmd` : Shows some quick commands for viewers  
-`!about` : Shows customized message  
+`!remove [level code]` : Removes a level from the queue, you can only remove your own levels  
+`!queue` : Shows up to 10 of the next levels in the queue  
+`!commands` or `!help` : Shows some quick commands for viewers  
 `!bot` : Shows bot description  
 
 ## Want to add or edit commands?
@@ -40,31 +38,32 @@ In order to run the chatbot, you will need to download Node.js, which you can do
 
 Next, you will have to download the code for the bot. Click on the green button at the top of this screen that says *'Clone or download'*, then click on *'Download as zip'*
 
-Now you need to locate the file `.env` (It's in the root of the project, like where the README and package.json files are). Once you have it, open it with your text editor of choice, then you will need to fill those fields with the following information:
+Now you need to locate the file `.env` (It's in the root of the project, like where the `package.json` is). Once you have it, open it with your text editor of choice, then you will need to fill those fields with the following information:
+
 
 ## Parameters
 
 ### Delegation Key
-You will need a delegation key from your own [Levelhead account](https://www.bscotch.net/account) with the following permissions:
-    -View own and others' Levelhead data (levels, profiles, aliases, etc).
-    -View, add, and delete own Levelhead level bookmarks.
-After you have generated it, copy it, and paste it in the `STREAMER_DELEGATION_KEY` parameter of the `.env` file. eg.  
+You will need a delegation key from your own [Levelhead account](https://www.bscotch.net/account) with the following permissions:  
++ View own and others' Levelhead data (levels, profiles, aliases, etc).  
++ View, add, and delete own Levelhead level bookmarks.  
+After you have generated it, copy it, and paste it in the `DELEGATION_TOKEN` parameter of the `.env` file. eg.  
 
-`STREAMER_DELEGATION_KEY="blahblahblahblah"`
+`DELEGATION_TOKEN="blahblahblahblah"`
 
 ### Twitch Streamer Channel Name
-On your own channel https://www.twitch.tv/channelName, get the last part that says "channelName" and paste it into the `TWITCH_CHANNEL` parameter eg.  
+On your own channel https://www.twitch.tv/channelName, get the last part that says "channelName" and paste it into the `CHANNEL` parameter eg.  
 
-`TWITCH_CHANNEL="someLevelheadStreamer"`
+`CHANNEL="someLevelheadStreamer"`
 
 ### Twitch Streamer Channel Username
 On your own channel, write something in the chat and copy your Twitch username displayed like this:
 
 `TwitchDisplayUserName: hey what's up?`
 
-"TwitchDisplayUserName" would be your display username, then paste it into the `STREAMER_USERNAME` parameter eg.  
+`TwitchDisplayUserName` would be your display username, then paste it into the `STREAMER` parameter eg.  
 
-`STREAMER_USERNAME="someTwitchUsername"`
+`STREAMER="someTwitchUsername"`
 
 ### Twitch Bot Username and OAuth Token
 This is the part where you need a second Twitch account, make sure that you don't do it on your streaming account!
@@ -76,22 +75,27 @@ Once you have the information, just paste them into the `BOT_USERNAME` and `OAUT
 `BOT_USERNAME="LevelheadBot"`
 `OAUTH_TOKEN="123123123123131231231"`
 
-### Prefix (optional, default: "!")
+### Prefix
 This parameter lets you customize what the symbol that denotes a command. For example in `!add`, the `!` is the prefix to your command. Just choose what you want the prefix to be, and fill out the parameter `PREFIX` eg.
 
 `PREFIX="$"`
 
+### Level Submission Limit
+This parameter controls how many levels a single person can submit. Set it to 0 to disable the limit. You can set it to any number you would like, in the `LEVEL_LIMIT` parameter eg.
+
+`LEVEL_LIMIT=5`
+
 ### Results
 The final file should now look something like this: (**Note:** It does **not** matter what order the parameters are in)
-**Make sure to then rename the file to `.env`, or else it will not work!**
 
 ```
-STREAMER_DELEGATION_KEY="blahblahblahblah"
-TWITCH_CHANNEL="someLevelheadStreamer"
-STREAMER_USERNAME="someTwitchUsername"
+BOT_USERNAME="botUsername"
+OAUTH_TOKEN="oauth:redacted"
+CHANNEL="yourChannel"
+STREAMER="yourUsername"
+DELEGATION_TOKEN="redacted"
 PREFIX="!"
-BOT_USERNAME="LevelheadBot"
-OAUTH_TOKEN="123123123123131231231"
+LEVEL_LIMIT=5
 ```
 
 ## Installing Project Dependencies
@@ -108,7 +112,7 @@ If you are curious about what you are installing, here's a list of the project d
 + Axios, https://www.npmjs.com/package/axios
 
 # Running the Bot
-Each time you run the bot, you'll have to naviagate in the terminal to the root of the project (where the package.json is located) and type:  
+Each time you run the bot, you'll have to naviagate in the terminal to the root of the project (Example: `C:\My_User\Documents\Shenanibot-public`, or where the `package.json` is located) and type:  
 
 `node .`
 
