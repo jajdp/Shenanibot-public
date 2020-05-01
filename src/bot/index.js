@@ -119,7 +119,7 @@ class ShenaniBot {
         levelInfo[0].title,
         username
       );
-      this.queue.length === 0 ? this.rce.bookmarks.add(level.levelId) : null;
+      this.queue.length === 0 ? this.rce.levelhead.bookmarks.add(level.levelId) : null;
       this.queue.push(level);
 
       this.users[username] ? this.users[username].levelsSubmitted++ : this.users[username] = { levelsSubmitted: 1 };
@@ -128,6 +128,7 @@ class ShenaniBot {
       response = this.options.levelLimit > 0 ? `${response} You have ${this.options.levelLimit - this.users[username].levelsSubmitted} level submissions left` : response;
       return response;
     } catch (error) {
+      console.error(error);
       let response = 'Oops! That level does not exist!';
       return response;
     }
@@ -144,6 +145,10 @@ class ShenaniBot {
 
       if (level.levelId === levelId) {
         if (level.submittedBy === username) {
+          if (i = 0) {
+            let response = 'You can\'t remove the current level from the queue!';
+            return response;
+          }
           this.queue.length === 1 ? this.queue = [] : this.queue = this.queue.splice(i, 1);
 
           let response = `${level.levelName}@${level.levelId} was removed from the queue!`;
