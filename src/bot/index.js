@@ -61,7 +61,10 @@ class ShenaniBot {
       let response = "There aren't any levels in the queue!";
       return response;
     }
+
+    this.rce.levelhead.bookmarks.remove(this.queue[0].levelId);
     this.queue.shift();
+    this.rce.levelhead.bookmarks.add(this.queue[0].levelId);
 
     if (this.queue.length === 0) {
       let response = "That was the last level in the queue!";
@@ -76,7 +79,10 @@ class ShenaniBot {
       let response = "There aren't any levels in the queue!";
       return response;
     }
+
+    this.rce.levelhead.bookmarks.remove(this.queue[0].levelId);
     this.queue.shift();
+    this.rce.levelhead.bookmarks.add(this.queue[0].levelId);
 
     let index = Math.round(Math.random() * (this.queue.length - 1));
     let randomLevel = this.queue[index];
@@ -109,9 +115,7 @@ class ShenaniBot {
         levelInfo[0].title,
         username
       );
-      this.rce.levelhead.bookmarks.add(level.levelId);
       this.queue.push(level);
-
       this.users[username] ? this.users[username].levelsSubmitted++ : this.users[username] = { levelsSubmitted: 1 };
 
       let response = `${level.levelName}@${level.levelId} was added to the queue! There are ${this.queue.length - 1} levels before yours in the queue.`;
