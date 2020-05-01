@@ -76,6 +76,8 @@ class ShenaniBot {
       let response = "There aren't any levels in the queue!";
       return response;
     }
+    this.queue.shift();
+
     let index = Math.round(Math.random() * (this.queue.length - 1));
     let randomLevel = this.queue[index];
     this.queue.splice(index, 1)
