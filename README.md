@@ -2,7 +2,7 @@
 The Shenanibot is a free Twitch chatbot developed to help streamers manage a queue of viewer-chosen levels for the Butterscotch Shenanigans game [Levelhead](https://bscotch.net/games/levelhead)
 
 ## What does it do?
-The bot stores a list of viewer-submitted levelcodes for you to play, and automatically syncs them to your bookmarks directly in LevelHead, so that you don't have to type them in and keep track of them!
+The bot stores a list of viewer-submitted levelcodes for you to play, and automatically syncs them to your bookmarks directly in LevelHead, so that you don't have to type in the level codes and keep track of them!
 
 ## Commands
 **Streamer Commands**  
@@ -19,7 +19,7 @@ The bot stores a list of viewer-submitted levelcodes for you to play, and automa
 `!bot` : Shows bot description  
 
 ## Want to add or edit commands?
-Feel free to fork or clone the bot, and change it however you like! Feel free to contribute to the bot, it's opensource after all!  
+Feel free to fork or clone the bot, and change it however you like. If you want your changes to be put in the main version, simply open a pull reqest and we will review it ASAP
 
 
 # Bot Setup
@@ -37,12 +37,13 @@ If you don't know how to program, don't worry. This quick guide will teach every
 **Node.js**  
 In order to run the chatbot, you will need to download Node.js, which you can download at https://nodejs.org. Click on the button that says *'Recommended for most users'*. Once it has downloaded, open the file, and a window will pop up to help guide you through the installation. The default settings should work fine.
 
-Next, you will have to download the code for the bot. Click on the green button at the top of this screen that says *'Clone or download'*, then click on *'Download as zip'*
+Next, you will have to download the code for the bot. Click on the green button at the top of this screen that says **Code**, then click on **Download ZIP**
 
 Now you need to locate the file `.env` (It's in the root of the project, like where the `package.json` is). Once you have it, open it with your text editor of choice, then you will need to fill those fields with the following information:
 
 
-## Parameters
+# Parameters
+## Authentication
 
 ### Delegation Key
 You will need a delegation key from your own [Levelhead account](https://www.bscotch.net/account) with the following permissions:  
@@ -76,6 +77,8 @@ Once you have the information, just paste them into the `BOT_USERNAME` and `OAUT
 `BOT_USERNAME="LevelheadBot"`
 `OAUTH_TOKEN="123123123123131231231"`
 
+## Configuration
+
 ### Prefix
 This parameter lets you customize what the symbol that denotes a command. For example in `!add`, the `!` is the prefix to your command. Just choose what you want the prefix to be, and fill out the parameter `PREFIX` eg.
 
@@ -86,17 +89,24 @@ This parameter controls how many levels a single person can submit. Set it to 0 
 
 `LEVEL_LIMIT=5`
 
-### Results
+### Level Submission Limit Type
+This option controls how the `LEVEL_LIMIT` option works.  It can be set to `session` which means each user can only submit -**x**- levels until the bot is reset, or `active` which means each user can only have -**x**- levels in the queue at one time
+
+`LEVEL_LIMIT_TYPE="active"`
+
+---
+## Results
 The final file should now look something like this: (**Note:** It does **not** matter what order the parameters are in)
 
 ```
-BOT_USERNAME="botUsername"
-OAUTH_TOKEN="oauth:redacted"
-CHANNEL="yourChannel"
+BOT_USERNAME="yourBotUsername"
+OAUTH_TOKEN="oauth:exampleoauthtoken"
+CHANNEL="yourTwitchChannel"
 STREAMER="yourUsername"
-DELEGATION_TOKEN="redacted"
+DELEGATION_TOKEN="exampledelegationkey"
 PREFIX="!"
-LEVEL_LIMIT=5
+LEVEL_LIMIT_TYPE="active"
+LEVEL_LIMIT=0
 ```
 
 ## Installing Project Dependencies
@@ -117,7 +127,7 @@ Each time you run the bot, you'll have to naviagate in the terminal to the root 
 
 `node .`
 
-Then the terminal window will show the connection process to your Twitch channel and greets you with "Bot Online!"
+Then the terminal window will show the connection process to your Twitch channel and greets you with `"Bot Online!"`
 
 ## Lastly...
 Feel free to study JavaScript and understand the code behind the Shenanibot. Make sure to edit and modify it as much as you need or want. And if you change it, feel free to help us make the bot better by sharing your code with us. Cheers!
