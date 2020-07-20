@@ -61,15 +61,19 @@ class ShenaniBot {
       let response = "There aren't any levels in the queue!";
       return response;
     }
-    if (this.queue.length === 1) {
-      let response = "This is the only level in the queue!";
-      return response;
-    }
 
     this.rce.levelhead.bookmarks.remove(this.queue[0].levelId);
     this.queue.shift();
-    this.rce.levelhead.bookmarks.add(this.queue[0].levelId);
+    if (this.options.levelLimitType === 'active') {
+      this.users[this.queue[0].submittedBy].levelsSubmitted--;
+    }
 
+    if (this.queue.length === 0) {
+      let response = "The queue is now empty";
+      return response;
+    }
+
+    this.rce.levelhead.bookmarks.add(this.queue[0].levelId);
     let response = `Now playing ${this.queue[0].levelName}@${this.queue[0].levelId} submitted by ${this.queue[0].submittedBy}`;
     return response;
   }
@@ -151,6 +155,9 @@ class ShenaniBot {
           }
           
           this.queue.splice(i, 1);
+          if (this.options.levelLimitType === 'active') {
+            this.users[username].levelsSubmitted--;
+          }
 
           let response = `${level.levelName}@${level.levelId} was removed from the queue!`;
           return response;

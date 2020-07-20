@@ -85,6 +85,11 @@ This parameter controls how many levels a single person can submit. Set it to 0 
 
 `LEVEL_LIMIT=5`
 
+### Level Submission Limit Type
+This specifies how LEVEL_LIMIT (above) is applied.  It can be set to "session" (meaning that we limit the total number of levels each user can submit; once you've submitted X levels, you're done until the bot is reset) or "active" (meaning that we only limit the number of levels a user may have in the queue at one time; a user's level count then decreases when their level is played or if they !remove it)
+
+ LEVEL_LIMIT_TYPE="active"
+
 ### Results
 The final file should now look something like this: (**Note:** It does **not** matter what order the parameters are in)
 
