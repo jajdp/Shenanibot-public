@@ -1,14 +1,14 @@
 require('dotenv').config();
 // this file basically just gets all the stuff from the .env file and makes it easier to access
 
-const botUsername = process.env.BOT_USERNAME;
+const botUsername = process.env.BOT_USERNAME.toLowerCase();
 const oauthToken = process.env.OAUTH_TOKEN;
-const channel = process.env.CHANNEL;
-const streamer = process.env.STREAMER;
+const channel = process.env.CHANNEL.toLowerCase();
+const streamer = process.env.STREAMER.toLowerCase();
 const delegationToken = process.env.DELEGATION_TOKEN;
 
 const prefix = process.env.PREFIX || '!';
-const levelLimit = process.env.LEVEL_LIMIT || '!';
+const levelLimit = process.env.LEVEL_LIMIT || 0;
 
 module.exports = {
   auth: {
