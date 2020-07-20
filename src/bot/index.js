@@ -41,6 +41,8 @@ class ShenaniBot {
       case "bot":
         return this.showBotInfo();
     }
+
+    return "";
   }
 
   openQueue() {
@@ -107,8 +109,16 @@ class ShenaniBot {
       return response;
     }
     if (this.options.levelLimit > 0 && this.users[username] && this.users[username].levelsSubmitted >= this.options.levelLimit) {
-      let response = `Oops, you have submitted the maximum number of levels, so you can't submit any more!`;
+      let response = "Oops, you have submitted the maximum number of levels, so you can't submit any more!";
       return response;
+    }
+    for (let i = 0; i < this.queue.length; i++) {
+      const level = this.queue[i];
+
+      if (level.levelId === levelId) {
+        let response = "That level is already in the queue!";
+        return response;
+      }
     }
 
     let levelInfo = await this.rce.levelhead.levels.search({ levelIds: levelId, includeAliases: true }, { doNotUseKey: true });
