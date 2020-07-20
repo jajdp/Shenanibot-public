@@ -1,5 +1,5 @@
-const Rumpus = require('@bscotch/rumpus-ce');
-const ViewerLevel = require('./lib/level');
+const Rumpus = require("@bscotch/rumpus-ce");
+const ViewerLevel = require("./lib/level");
 
 class ShenaniBot {
   constructor(botOptions) {
@@ -12,45 +12,45 @@ class ShenaniBot {
   }
 
   async command(command, username) {
-    if (!command.startsWith(this.options.prefix)) return '';
-    command = command.substring(this.options.prefix.length).split(' ');
+    if (!command.startsWith(this.options.prefix)) return "";
+    command = command.substring(this.options.prefix.length).split(" ");
 
     if (username === this.streamer) {
       switch (command[0]) {
-        case 'open':
+        case "open":
           return this.openQueue();
-        case 'close':
+        case "close":
           return this.closeQueue();
-        case 'next':
+        case "next":
           return this.nextLevel();
-        case 'random':
+        case "random":
           return this.randomLevel();
       }
     }
 
     switch (command[0]) {
-      case 'add':
+      case "add":
         return this.addLevelToQueue(command[1], username);
-      case 'remove':
+      case "remove":
         return this.removeLevelFromQueue(command[1], username);
-      case 'queue':
+      case "queue":
         return this.showQueue();
-      case 'commands':
-      case 'help':
+      case "commands":
+      case "help":
         return this.showBotCommands();
-      case 'bot':
+      case "bot":
         return this.showBotInfo();
     }
   }
 
   openQueue() {
-    let response = 'The queue has been opened, add some levels to it!';
+    let response = "The queue has been opened, add some levels to it!";
 
     this.queueOpen = true;
     return response;
   }
   closeQueue() {
-    let response = 'The queue has been closed! No more levels :(';
+    let response = "The queue has been closed! No more levels :(";
 
     this.queueOpen = false;
     return response;
@@ -99,7 +99,7 @@ class ShenaniBot {
 
   async addLevelToQueue(levelId, username) {
     if (!this.queueOpen) {
-      let response = 'Sorry, queue is closed!';
+      let response = "Sorry, queue is closed!";
       return response;
     }
     if (levelId.length !== 7) {
@@ -129,7 +129,7 @@ class ShenaniBot {
       return response;
     } catch (error) {
       console.error(error);
-      let response = 'Oops! That level does not exist!';
+      let response = "Oops! That level does not exist!";
       return response;
     }
 
@@ -145,21 +145,22 @@ class ShenaniBot {
 
       if (level.levelId === levelId) {
         if (level.submittedBy === username) {
-          if (i = 0) {
-            let response = 'You can\'t remove the current level from the queue!';
+          if (i === 0) {
+            let response = "You can't remove the current level from the queue!";
             return response;
           }
-          this.queue.length === 1 ? this.queue = [] : this.queue = this.queue.splice(i, 1);
+          
+          this.queue.splice(i, 1);
 
           let response = `${level.levelName}@${level.levelId} was removed from the queue!`;
           return response;
         } else {
-          let response = 'You can\'t remove a level from the queue that you didn\'t submit!';
+          let response = "You can't remove a level from the queue that you didn't submit!";
           return response;
         }
       }
     }
-    let response = 'The level you tried to remove doesn\'t exist :(';
+    let response = "The level you tried to remove doesn't exist :(";
     return response;
   }
   showQueue() {
