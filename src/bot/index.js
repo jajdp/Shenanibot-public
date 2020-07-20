@@ -63,15 +63,15 @@ class ShenaniBot {
       let response = "There aren't any levels in the queue!";
       return response;
     }
-
-    this.rce.levelhead.bookmarks.remove(this.queue[0].levelId);
-    this.queue.shift();
-    if (this.options.levelLimitType === 'active') {
+    if (this.options.levelLimitType === "active") {
       this.users[this.queue[0].submittedBy].levelsSubmitted--;
     }
 
+    this.rce.levelhead.bookmarks.remove(this.queue[0].levelId);
+    this.queue.shift();
+    
     if (this.queue.length === 0) {
-      let response = "The queue is now empty";
+      let response = "The queue is now empty.";
       return response;
     }
 
@@ -85,15 +85,15 @@ class ShenaniBot {
       let response = "There aren't any levels in the queue!";
       return response;
     }
-
-    this.rce.levelhead.bookmarks.remove(this.queue[0].levelId);
-    this.queue.shift();
-    if (this.options.levelLimitType === 'active') {
+    if (this.options.levelLimitType === "active") {
       this.users[this.queue[0].submittedBy].levelsSubmitted--;
     }
 
+    this.rce.levelhead.bookmarks.remove(this.queue[0].levelId);
+    this.queue.shift();
+
     if (this.queue.length === 0) {
-      let response = "The queue is now empty";
+      let response = "The queue is now empty.";
       return response;
     }
 
