@@ -9,7 +9,7 @@ const delegationToken = process.env.DELEGATION_TOKEN;
 
 const prefix = process.env.PREFIX || '!';
 const levelLimit = process.env.LEVEL_LIMIT || 0;
-const levelLimitType = (process.env.LEVEL_LIMIT_TYPE || 'active').toLocaleLowerCase();
+const levelLimitType = (process.env.LEVEL_LIMIT_TYPE || 'active').toLowerCase();
 
 module.exports = {
   auth: {
