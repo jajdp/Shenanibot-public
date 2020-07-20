@@ -31,6 +31,7 @@ You can join the [Butterscotch Shenanigans Discord](https://discord.gg/w55QE5Y) 
 + Node.js
 + Streamer Twitch account
 + Bot Twitch account
+
 If you don't know how to program, don't worry. This quick guide will teach everything you need to know to get the bot up and running!
 
 **Node.js**  
