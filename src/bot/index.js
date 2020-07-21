@@ -93,7 +93,7 @@ class ShenaniBot {
     }
 
     if (this.options.levelLimit > 0 && this.users[username] && this.users[username].levelsSubmitted >= this.options.levelLimit) {
-      response = "Oops, you have submitted the maximum number of levels, so you can't submit any more!";
+      response = "Oops, you have submitted the maximum number of levels!";
       return response;
     }
 
@@ -121,8 +121,8 @@ class ShenaniBot {
 
       this.users[username] ? this.users[username].levelsSubmitted++ : this.users[username] = { levelsSubmitted: 1 };
 
-      response = `${level.levelName}@${level.levelId} was added to the queue! There are ${this.queue.length - 1} levels before yours in the queue.`;
-      response = this.options.levelLimit > 0 ? `${response} You have ${this.options.levelLimit - this.users[username].levelsSubmitted} level submissions left` : response;
+      response = `${level.levelName}@${level.levelId} was added! Your level is #${this.queue.length} in queue.`;
+      response = this.options.levelLimit > 0 ? `${response} Submission ${this.options.levelLimit - this.users[username].levelsSubmitted}/${this.options.levelLimit}` : response;
       return response;
     } catch (error) {
       console.error(error);
@@ -167,7 +167,7 @@ class ShenaniBot {
     }
 
     let limit = Math.min(10, this.queue.length);
-    let response = `Next ${limit} levels: `;
+    let response = `Next ${limit} levels:`;
     for (let i = 0; i < limit; i++) {
       const level = this.queue[i];
       response = `${response} [${level.levelName}@${level.levelId}]`;
