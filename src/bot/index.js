@@ -9,6 +9,7 @@ class ShenaniBot {
     this.queue = [];
     this.queueOpen = true;
     this.users = {};
+    this.levels = {};
   }
 
   async command(command, username) {
@@ -119,13 +120,10 @@ class ShenaniBot {
       return response;
     }
 
-    for (let i = 0; i < this.queue.length; i++) {
-      const level = this.queue[i];
-
-      if (level.levelId === levelId) {
-        response = "That level is already in the queue!";
-        return response;
-      }
+    const reason = this.levels[levelId];
+    if (reason) {
+      response = `That level ${reason}!`;
+      return response;
     }
 
     let levelInfo = await this.rce.levelhead.levels.search({ levelIds: levelId, includeAliases: true }, { doNotUseKey: true });
@@ -146,6 +144,7 @@ class ShenaniBot {
 
       response = `${level.levelName}@${level.levelId} was added! Your level is #${this.queue.length} in queue.`;
       response = this.options.levelLimit > 0 ? `${response} Submission ${user.levelsSubmitted}/${this.options.levelLimit}` : response;
+      this.levels[levelInfo[0].levelId] = "is already in the queue";
       return response;
     } catch (error) {
       console.error(error);
@@ -172,6 +171,7 @@ class ShenaniBot {
           
           this._removeFromQueue(i);
           response = `${level.levelName}@${level.levelId} was removed from the queue!`;
+          this.levels[levelId] = null;
           return response;
         } else {
           response = "You can't remove a level from the queue that you didn't submit!";
@@ -228,6 +228,7 @@ class ShenaniBot {
     }
 
     this.rce.levelhead.bookmarks.remove(this.queue[0].levelId);
+    this.levels[this.queue[0].levelId] = "was already played";
     this._removeFromQueue(0);
     
     return {
