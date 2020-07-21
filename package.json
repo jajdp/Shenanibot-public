@@ -12,7 +12,8 @@
   "devDependencies": {},
   "scripts": {
     "bot": "node .",
-    "test": "node src/test/test.js"
+    "test": "node src/test/test.js",
+    "basictest": "node src/test/basictest.js"
   },
   "repository": {
     "type": "git",
