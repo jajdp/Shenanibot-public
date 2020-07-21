@@ -51,6 +51,7 @@ class ShenaniBot {
     this.queueOpen = true;
     return response;
   }
+
   closeQueue() {
     let response = "The queue has been closed! No more levels :(";
 
@@ -59,51 +60,24 @@ class ShenaniBot {
   }
 
   nextLevel() {
-    if (this.queue.length === 0) {
-      let response = "There aren't any levels in the queue!";
-      return response;
-    }
-    if (this.options.levelLimitType === "active") {
-      this.users[this.queue[0].submittedBy].levelsSubmitted--;
+    let {empty, response} = this._dequeueLevel();
+    if (!empty) {
+      response = this._playLevel();
     }
 
-    this.rce.levelhead.bookmarks.remove(this.queue[0].levelId);
-    this.queue.shift();
-    
-    if (this.queue.length === 0) {
-      let response = "The queue is now empty.";
-      return response;
-    }
-
-    this.rce.levelhead.bookmarks.add(this.queue[0].levelId);
-    let response = `Now playing ${this.queue[0].levelName}@${this.queue[0].levelId} submitted by ${this.queue[0].submittedBy}`;
     return response;
   }
 
   randomLevel() {
-    if (this.queue.length === 0) {
-      let response = "There aren't any levels in the queue!";
-      return response;
+    let {empty, response} = this._dequeueLevel();
+    if (!empty) {
+      let index = Math.round(Math.random() * (this.queue.length - 1));
+      let randomLevel = this.queue[index];
+      this.queue.splice(index, 1)
+      this.queue.unshift(randomLevel);
+
+      response = `Random Level... ${this._playLevel()}`
     }
-    if (this.options.levelLimitType === "active") {
-      this.users[this.queue[0].submittedBy].levelsSubmitted--;
-    }
-
-    this.rce.levelhead.bookmarks.remove(this.queue[0].levelId);
-    this.queue.shift();
-
-    if (this.queue.length === 0) {
-      let response = "The queue is now empty.";
-      return response;
-    }
-
-    let index = Math.round(Math.random() * (this.queue.length - 1));
-    let randomLevel = this.queue[index];
-    this.queue.splice(index, 1)
-    this.queue.unshift(randomLevel);
-
-    this.rce.levelhead.bookmarks.add(this.queue[0].levelId);
-    let response = `Random Level... Now playing ${this.queue[0].levelName}@${this.queue[0].levelId} submitted by ${this.queue[0].submittedBy}`;
     return response;
   }
 
@@ -112,19 +86,22 @@ class ShenaniBot {
       let response = "Sorry, queue is closed!";
       return response;
     }
-    if (levelId.length !== 7) {
-      let response = `${levelId} is not a valid level code, they're 7 characters long!`;
+
+    let {valid, response} = this._validateLevelId(levelId)
+    if (!valid) {
       return response;
     }
+
     if (this.options.levelLimit > 0 && this.users[username] && this.users[username].levelsSubmitted >= this.options.levelLimit) {
-      let response = "Oops, you have submitted the maximum number of levels, so you can't submit any more!";
+      response = "Oops, you have submitted the maximum number of levels, so you can't submit any more!";
       return response;
     }
+
     for (let i = 0; i < this.queue.length; i++) {
       const level = this.queue[i];
 
       if (level.levelId === levelId) {
-        let response = "That level is already in the queue!";
+        response = "That level is already in the queue!";
         return response;
       }
     }
@@ -137,24 +114,26 @@ class ShenaniBot {
         levelInfo[0].title,
         username
       );
-      this.queue.length === 0 ? this.rce.levelhead.bookmarks.add(level.levelId) : null;
       this.queue.push(level);
+      if (this.queue.length === 1) {
+        this._playLevel();
+      }
 
       this.users[username] ? this.users[username].levelsSubmitted++ : this.users[username] = { levelsSubmitted: 1 };
 
-      let response = `${level.levelName}@${level.levelId} was added to the queue! There are ${this.queue.length - 1} levels before yours in the queue.`;
+      response = `${level.levelName}@${level.levelId} was added to the queue! There are ${this.queue.length - 1} levels before yours in the queue.`;
       response = this.options.levelLimit > 0 ? `${response} You have ${this.options.levelLimit - this.users[username].levelsSubmitted} level submissions left` : response;
       return response;
     } catch (error) {
       console.error(error);
-      let response = "Oops! That level does not exist!";
+      response = "Oops! That level does not exist!";
       return response;
     }
-
   }
+
   removeLevelFromQueue(levelId, username) {
-    if (levelId.length !== 7) {
-      let response = `${levelId} is not a valid level code, they're 7 characters long!`;
+    let {valid, response} = this._validateLevelId(levelId)
+    if (!valid) {
       return response;
     }
 
@@ -164,26 +143,23 @@ class ShenaniBot {
       if (level.levelId === levelId) {
         if (level.submittedBy === username) {
           if (i === 0) {
-            let response = "You can't remove the current level from the queue!";
+            response = "You can't remove the current level from the queue!";
             return response;
           }
           
-          this.queue.splice(i, 1);
-          if (this.options.levelLimitType === 'active') {
-            this.users[username].levelsSubmitted--;
-          }
-
-          let response = `${level.levelName}@${level.levelId} was removed from the queue!`;
+          this._removeFromQueue(i);
+          response = `${level.levelName}@${level.levelId} was removed from the queue!`;
           return response;
         } else {
-          let response = "You can't remove a level from the queue that you didn't submit!";
+          response = "You can't remove a level from the queue that you didn't submit!";
           return response;
         }
       }
     }
-    let response = "The level you tried to remove doesn't exist :(";
+    response = "The level you tried to remove doesn't exist :(";
     return response;
   }
+
   showQueue() {
     if (this.queue.length === 0) {
       let response = "There aren't any levels in the queue!";
@@ -203,10 +179,52 @@ class ShenaniBot {
     let response = `${this.options.prefix}add [levelcode], ${this.options.prefix}bot, ${this.options.prefix}queue`;
     return response;
   }
+
   showBotInfo() {
     let response = `This bot was created for the LevelHead Community by jajdp and FantasmicGalaxy.
     Want to use it in your own stream? You can get it here: https://github.com/jajdp/Shenanibot-public`;
     return response;
+  }
+
+  _dequeueLevel() {
+    if (this.queue.length === 0) {
+      return {
+        empty: true,
+        response: "There aren't any levels in the queue!"
+      };
+    }
+
+    this.rce.levelhead.bookmarks.remove(this.queue[0].levelId);
+    this._removeFromQueue(0);
+    
+    return {
+      empty: !this.queue.length,
+      response: (!this.queue.length) ? "The queue is now empty." : null
+    };
+  }
+
+  _playLevel() {
+    this.rce.levelhead.bookmarks.add(this.queue[0].levelId);
+    return `Now playing ${this.queue[0].levelName}@${this.queue[0].levelId} submitted by ${this.queue[0].submittedBy}`;
+  }
+
+  _validateLevelId(id) {
+    if (id.length !== 7) {
+      return {
+        valid: false,
+        response: `${id} is not a valid level code, they're 7 characters long!`
+      };
+    }
+    return {valid: true, response: null};
+  }
+
+  _removeFromQueue(index) {
+    const username = this.queue[index].submittedBy;
+
+    this.queue.splice(index, 1);
+    if (this.options.levelLimitType === "active") {
+      this.users[username].levelsSubmitted--;
+    }
   }
 }
 
