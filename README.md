@@ -8,6 +8,7 @@ The bot stores a list of viewer-submitted levelcodes for you to play, and automa
 **Streamer Commands**  
 `!open` : Opens the queue for viewers to submit levels  
 `!close` : Closes the queue  
+`!permit [user name]` : Allows a user to add one level to the queue even if it is closed or they have reached the submission limit
 `!next` : Moves the queue forward a level  
 `!random` : Chooses a random level from the queue and puts it at the front of the queue to play
   
