@@ -10,6 +10,7 @@ const delegationToken = process.env.DELEGATION_TOKEN;
 const prefix = process.env.PREFIX || '!';
 const levelLimit = process.env.LEVEL_LIMIT || 0;
 const levelLimitType = (process.env.LEVEL_LIMIT_TYPE || 'active').toLowerCase();
+const useThrottle = (process.env.USE_THROTTLE || 'false').toLowerCase() === 'true';
 
 module.exports = {
   auth: {
@@ -22,6 +23,7 @@ module.exports = {
   config: {
     prefix,
     levelLimit,
-    levelLimitType
+    levelLimitType,
+    useThrottle
   }
 }

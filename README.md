@@ -94,6 +94,11 @@ This option controls how the `LEVEL_LIMIT` option works.  It can be set to `sess
 
 `LEVEL_LIMIT_TYPE="active"`
 
+### Twitch Message Throttling
+If you want to limit the rate at which the bot sends twitch chat messages, you can enable this option.  This can be useful to prevent an active chat (or potentially an attacker) from causeing the bot to spam or, in extreme cases, to be disconnected by Twitch anti-spam measures.
+
+`USE_THROTTLE="true"`
+
 ---
 ## Results
 The final file should now look something like this: (**Note:** It does **not** matter what order the parameters are in)
