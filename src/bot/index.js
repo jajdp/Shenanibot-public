@@ -22,7 +22,7 @@ class ShenaniBot {
         case "close":
           return this.closeQueue();
         case "permit":
-          return this.permitUser(command[1].toLowerCase());
+          return command[1] ? this.permitUser(command[1].toLowerCase()) : "";
         case "next":
           return this.nextLevel();
         case "random":
@@ -32,7 +32,7 @@ class ShenaniBot {
 
     switch (command[0]) {
       case "add":
-        return this.addLevelToQueue(command[1], username);
+        return command[1] ? this.addLevelToQueue(command[1], username) : "";
       case "remove":
         return this.removeLevelFromQueue(command[1], username);
       case "queue":
@@ -62,6 +62,10 @@ class ShenaniBot {
   }
 
   permitUser(username) {
+    if (username[0] === "@") {
+      username = username.slice(1);
+    }
+
     let response;
     const user = this._getUser(username);
 
