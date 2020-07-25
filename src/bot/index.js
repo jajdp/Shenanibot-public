@@ -21,6 +21,8 @@ class ShenaniBot {
           return this.openQueue();
         case "close":
           return this.closeQueue();
+        case "permit":
+          return command[1] ? this.permitUser(command[1].toLowerCase()) : "";
         case "next":
           return this.nextLevel();
         case "random":
@@ -30,7 +32,7 @@ class ShenaniBot {
 
     switch (command[0]) {
       case "add":
-        return this.addLevelToQueue(command[1], username);
+        return command[1] ? this.addLevelToQueue(command[1], username) : "";
       case "remove":
         return this.removeLevelFromQueue(command[1], username);
       case "queue":
@@ -59,6 +61,24 @@ class ShenaniBot {
     return response;
   }
 
+  permitUser(username) {
+    if (username[0] === "@") {
+      username = username.slice(1);
+    }
+
+    let response;
+    const user = this._getUser(username);
+
+    if (this.queueOpen && (user.levelsSubmitted < this.options.levelLimit || this.options.levelLimit === 0)) {
+      response = `${username} is able to submit levels.`;
+      return response;
+    }
+
+    user.permit = true;
+    response = `@${username}, you may submit one level to the queue now.`;
+    return response;
+  }
+
   nextLevel() {
     let {empty, response} = this._dequeueLevel();
     if (!empty) {
@@ -82,7 +102,9 @@ class ShenaniBot {
   }
 
   async addLevelToQueue(levelId, username) {
-    if (!this.queueOpen) {
+    const user = this._getUser(username);
+
+    if (!this.queueOpen && !user.permit) {
       let response = "Sorry, queue is closed!";
       return response;
     }
@@ -92,7 +114,7 @@ class ShenaniBot {
       return response;
     }
 
-    if (this.options.levelLimit > 0 && this.users[username] && this.users[username].levelsSubmitted >= this.options.levelLimit) {
+    if (this.options.levelLimit > 0 && user.levelsSubmitted >= this.options.levelLimit && !user.permit) {
       response = "Oops, you have submitted the maximum number of levels!";
       return response;
     }
@@ -119,10 +141,11 @@ class ShenaniBot {
         this._playLevel();
       }
 
-      this.users[username] ? this.users[username].levelsSubmitted++ : this.users[username] = { levelsSubmitted: 1 };
+      user.levelsSubmitted++;
+      user.permit = (username === this.streamer);
 
       response = `${level.levelName}@${level.levelId} was added! Your level is #${this.queue.length} in queue.`;
-      response = this.options.levelLimit > 0 ? `${response} Submission ${this.options.levelLimit - this.users[username].levelsSubmitted}/${this.options.levelLimit}` : response;
+      response = this.options.levelLimit > 0 ? `${response} Submission ${user.levelsSubmitted}/${this.options.levelLimit}` : response;
       return response;
     } catch (error) {
       console.error(error);
@@ -186,6 +209,16 @@ class ShenaniBot {
     return response;
   }
 
+  _getUser(username) {
+    if (!this.users[username]) {
+      this.users[username] = {
+        levelsSubmitted: 0,
+        permit: username === this.streamer
+      };
+    }
+    return this.users[username];
+  }
+
   _dequeueLevel() {
     if (this.queue.length === 0) {
       return {
@@ -223,7 +256,7 @@ class ShenaniBot {
 
     this.queue.splice(index, 1);
     if (this.options.levelLimitType === "active") {
-      this.users[username].levelsSubmitted--;
+      this._getUser(username).levelsSubmitted--;
     }
   }
 }

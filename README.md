@@ -8,6 +8,7 @@ The bot stores a list of viewer-submitted levelcodes for you to play, and automa
 **Streamer Commands**  
 `!open` : Opens the queue for viewers to submit levels  
 `!close` : Closes the queue  
+`!permit [user name]` : Allows a user to add one level to the queue even if it is closed or they have reached the submission limit
 `!next` : Moves the queue forward a level  
 `!random` : Chooses a random level from the queue and puts it at the front of the queue to play
   
@@ -93,6 +94,11 @@ This parameter controls how many levels a single person can submit. Set it to 0 
 This option controls how the `LEVEL_LIMIT` option works.  It can be set to `session` which means each user can only submit -**x**- levels until the bot is reset, or `active` which means each user can only have -**x**- levels in the queue at one time
 
 `LEVEL_LIMIT_TYPE="active"`
+
+### Twitch Message Throttling
+If you want to limit the rate at which the bot sends twitch chat messages, you can enable this option.  This can be useful to prevent an active chat (or potentially an attacker) from causeing the bot to spam or, in extreme cases, to be disconnected by Twitch anti-spam measures.
+
+`USE_THROTTLE="true"`
 
 ---
 ## Results
