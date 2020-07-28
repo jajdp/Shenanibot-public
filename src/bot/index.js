@@ -165,7 +165,7 @@ class ShenaniBot {
       const level = this.queue[i];
 
       if (level.levelId === levelId) {
-        if (level.submittedBy === username) {
+        if (level.submittedBy === username || this.streamer === username) {
           if (i === 0) {
             response = "You can't remove the current level from the queue!";
             return response;
@@ -173,7 +173,7 @@ class ShenaniBot {
           
           this._removeFromQueue(i);
           response = `${level.levelName}@${level.levelId} was removed from the queue!`;
-          this.levels[levelId] = null;
+          this.levels[levelId] = (username === this.streamer) ? `was removed by ${username}; it can't be re-added` : null;
           return response;
         } else {
           response = "You can't remove a level from the queue that you didn't submit!";
