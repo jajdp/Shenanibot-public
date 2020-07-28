@@ -135,15 +135,17 @@ class ShenaniBot {
         username
       );
       this.queue.push(level);
-      if (this.queue.length === 1) {
-        this._playLevel();
-      }
 
       user.levelsSubmitted++;
       user.permit = (username === this.streamer);
 
       response = `${level.levelName}@${level.levelId} was added! Your level is #${this.queue.length} in queue.`;
       response = this.options.levelLimit > 0 ? `${response} Submission ${user.levelsSubmitted}/${this.options.levelLimit}` : response;
+
+      if (this.queue.length === 1) {
+        response = `${response}\n${this._playLevel()}`;
+      }
+
       this.levels[levelInfo[0].levelId] = "is already in the queue";
       return response;
     } catch (error) {

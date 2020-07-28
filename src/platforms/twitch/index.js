@@ -35,7 +35,9 @@ const shenanibot = new ShenaniBot(env);
 
     (async function command() {
       let response = await shenanibot.command(message, user.username);
-      client.say(env.auth.channel, response);
+      for (const message of response.split('\n')) {
+        client.say(env.auth.channel, message);
+      }
     })();
   });
 })();
