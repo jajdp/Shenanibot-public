@@ -101,6 +101,14 @@ If you want to limit the rate at which the bot sends twitch chat messages, you c
 
 `USE_THROTTLE="true"`
 
+### Overlay
+The bot can provide a web server to display information about the queue.  The pages served in this way can be used, for example, as browser sources in OBS.  By default the server will listen on port 8080, but this is configurable.
+
+`USE_OVERLAY="true"`
+`OVERLAY_PORT=8888`
+
+For details on the available views and how to customize them, start up the bot and navigate a web browser to the URL it provides (http://localhost:8080 by default).
+
 ---
 ## Results
 The final file should now look something like this: (**Note:** It does **not** matter what order the parameters are in)

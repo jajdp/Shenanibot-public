@@ -1,5 +1,6 @@
 const Rumpus = require("@bscotch/rumpus-ce");
 const ViewerLevel = require("./lib/level");
+const olServer = require("../overlay/server");
 
 class ShenaniBot {
   constructor(botOptions) {
@@ -54,6 +55,7 @@ class ShenaniBot {
     let response = "The queue has been opened, add some levels to it!";
 
     this.queueOpen = true;
+    olServer.sendStatus(true);
     return response;
   }
 
@@ -61,6 +63,7 @@ class ShenaniBot {
     let response = "The queue has been closed! No more levels :(";
 
     this.queueOpen = false;
+    olServer.sendStatus(false);
     return response;
   }
 
@@ -88,6 +91,7 @@ class ShenaniBot {
       response = this._playLevel();
     }
 
+    olServer.sendLevels(this.queue);
     return response;
   }
 
@@ -106,6 +110,8 @@ class ShenaniBot {
       }
       response = (response || '') + this._playLevel()
     }
+
+    olServer.sendLevels(this.queue);
     return response;
   }
 
@@ -116,6 +122,7 @@ class ShenaniBot {
     }
 
     this.queue.push(null);
+    olServer.sendLevels(this.queue);
     let response = "A marker has been added to the queue.";
     return response;
   }
@@ -153,6 +160,7 @@ class ShenaniBot {
         username
       );
       this.queue.push(level);
+      olServer.sendLevels(this.queue);
 
       user.levelsSubmitted++;
       user.permit = (username === this.streamer);
@@ -190,6 +198,7 @@ class ShenaniBot {
           }
           
           this._removeFromQueue(i);
+          olServer.sendLevels(this.queue);
           response = `${level.levelName}@${level.levelId} was removed from the queue!`;
           this.levels[levelId] = (username === this.streamer) ? `was removed by ${username}; it can't be re-added` : null;
           return response;

@@ -1,0 +1,32 @@
+<html>
+  <head>
+    <title>ShenaniBot Overlay Setup</title>
+    <style>
+      iframe {
+        margin: .5rem 0 .5rem 2rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <p>The ShenaniBot overlay provides several built-in views for use as Browser
+    Sources.</p>
+
+    <p>Each view has a primary URL and can accept query string parameters.  A
+    view may also have additional URL "aliases" that redirect to it with preset
+    query string parameters.</p>
+
+    <p>You can use CSS overrides to customize each view's appearance.</p>
+
+    <h1>Index</h1>
+    <ul>
+      <li>...
+    </ul>
+
+    <script language="javascript" type="text/javascript">
+      for (const span of document.getElementsByClassName("baseUrl")) {
+        span.innerHTML = document.location.origin;
+      }
+    </script>
+  </body>
+</html>
