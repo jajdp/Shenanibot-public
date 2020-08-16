@@ -1,0 +1,103 @@
+<html>
+  <head>
+    <style type="text/css">
+      .container {
+        background-color: #000000;
+        border: 0.5em #7f7f7f ridge;
+        color: #ffffff;
+        display: flex;
+        flex-direction: column;
+	height: 8em;
+        padding: 0.5em;
+        width: 200px;
+      }
+      .title {
+        font-size: 1.125em;
+      }
+      .level-info {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        justify-content: center;
+        padding: .25em .5em .25em .5em;
+      }
+      .level-name {
+        color: #7fff7f;
+        font-size: 1.25em;
+        line-height: 1.2em;
+      }
+      .level-id {
+        color: #4f7f4f;
+        font-size: .75em;
+      }
+      .submitted-by {
+        color: #7f7f7f;
+        font-size: .875em;
+        overflow: hidden;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <span class="title"></span>
+      <div class="level-info">
+        <span class="level-name"></span>
+        <span class="level-id"></span>
+      </div>
+      <span class="submitted-by"></span>
+    </div>
+    <script language="javascript" type="text/javascript">
+      const params = new URLSearchParams(window.location.search);
+      const model = {
+        title: "",
+        levelName: "",
+        levelId: "",
+        submittedBy: ""
+      };
+      const updateView = () => {
+        document.getElementsByClassName("level-id")[0].innerHTML = `${model.levelId}`;
+        document.getElementsByClassName("level-name")[0].innerHTML = model.levelName;
+        if (model.submittedBy && model.submittedBy.trim().length) {
+          document.getElementsByClassName("submitted-by")[0].innerHTML = `Submitted by ${model.submittedBy}`;
+        } else {
+          document.getElementsByClassName("submitted-by")[0].innerHTML = '&nbsp;';
+        }
+      };
+
+      (() => {
+        if (params.get("demo") === "true") {
+          model.title = "Now Playing";
+          model.levelName = "Blopfush Race";
+          model.levelId = "kbt89w5";
+          model.submittedBy = "madelsberger";
+          updateView();
+        } else {
+          model.title = params.get("title");
+          if (!params.has("position") || !params.has("skip_mark")) {
+            document.body.innerHTML = "Missing required query parameters; position and skip_mark must be specified";
+            return;
+          }
+          const ws = new WebSocket(`ws://${window.location.host}/levels`);
+          ws.onmessage = m => {
+            const queue = JSON.parse(m.data);
+            const entry = ((params.get("skip_mark") === "true") ? queue.filter(e => e.type === "level") : queue)[parseInt(params.get("position"), 10) - 1];
+            if (entry && entry.type === 'level') {
+              model.levelName = entry.level.levelName;
+              model.levelId = entry.level.levelId;
+              model.submittedBy = entry.level.submittedBy;
+            } else {
+              model.levelName = '';
+              model.levelId = '';
+              model.submittedBy = '';
+            }
+            updateView();
+          };
+        }
+        if (model.title && model.title.trim().length) {
+          document.getElementsByClassName("title")[0].innerHTML = `${model.title}:`;
+        }
+      })();
+    </script>
+  </body>
+</html>

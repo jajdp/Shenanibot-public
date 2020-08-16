@@ -20,8 +20,77 @@
 
     <h1>Index</h1>
     <ul>
-      <li>...
+      <li><a href="#level-info">Level Info</a>
+      <li><a href="#now-playing">Now Playing</a>
+      <li><a href="#up-next">Up Next</a>
     </ul>
+
+    <hr>
+
+    <a name="level-info"><h1>Level Info</h1></a>
+        <p>Show details of a level at a specified position in the queue.</p>
+
+        <iframe width="255" height="180" src="./levelInfo.html?demo=true"></iframe>
+
+        <h2>Main URL</h2>
+            <span class="baseUrl"></span>/levelInfo.html
+
+        <h2>Query Parameters:</h2>
+
+            <p><dfn>position</dfn> (number) Which level's info should be shown,
+               based on order of the queue.</p>
+            <p><dfn>skip_mark</dfn> (<code>true</code> or <code>false</code>)
+               Whether to filter out "markers" before counting levels to find
+               the one specified by <code>position</code>; see notes below.</p>
+            <p><dfn>title</dfn> (string; optional) A heading, such as "Now
+               Plaing" or "Up Next".  Note that this may need to be URL-encoded
+               (which often just means replacing spaces with %20).</p>
+
+        <h2>URL Aliases:</h2>
+
+        <ul>
+          <li><dfn><a name="now-playing"><span class="baseUrl"></span>/nowPlaying.html</a></dfn> Shows
+              the level (if any) currently being played. (<code>position</code>
+              = 1 ; <code>skip_mark</code> = <code>false</code> ;
+              <code>title</code> = <code>Now Playing</code>)
+          <li><dfn><a name="up-next"><span class="baseUrl"></span>/upNext.html</a></dfn> Shows
+              the level (if any) to be played next. (<code>position</code>
+              = 2 ; <code>skip_mark</code> = <code>false</code> ;
+              <code>title</code> = <code>Up Next</code>)
+        </ul>
+        <h2>Notes:</h2>
+
+        <p>The queue can contain levels and/or "markers".  (A marker is placed
+        by the streamer with the <code>!mark</code> command; it represents a
+        time during which no level from the queue is being played.)</p>
+
+        <p>The <code>skip_mark</code> parmaeter determines whether markers are
+        counted when applying the <code>position</code> parameter.</p>
+
+        <p>If <code>skip_mark</code> is <code>false</code>, then all queue
+        entries are counted; so a <code>position</code> of <i>N</i> means to
+        show info for the <i>Nth</i> entry no matter what.  (This is used with
+        <code>position</code> 1 by the "Now Playing" alias, for example, to
+        show the level - if any - being played.)</p>
+
+        <p>If <code>skip_mark</code> is <code>true</code>, then marker entries
+        are not counted; so a <code>position</code> of <i>N</i> means to show
+        info for the <i>Nth</i> actual level, even if one or more "breaks
+        between levels" are skipped over in the process.
+
+        <h2>CSS Classes:</h2>
+            <p><dfn>container</dfn> The block containing all of the information
+               being diaplayed.  By default this is a column-oriented flex
+               container with a black background and a ridged border.<p>
+            <p><dfn>title</dfn> The title text (e.g. Now Playing in the above
+               snapshot).</p>
+            <p><dfn>level-info</dfn> A container for the level name and id.  By
+               default this is used to keep the name/id centered between the
+               title and the "submitted by" line.</p>
+            <p><dfn>level-name</dfn> The level name text.</p>
+            <p><dfn>level-id</dfn> The level id text (the 7-digit code).</p>
+            <p><dfn>submitted-by</dfn> The 'Submitted by &lt;name&gt;' text.<p>
+    <hr>
 
     <script language="javascript" type="text/javascript">
       for (const span of document.getElementsByClassName("baseUrl")) {
