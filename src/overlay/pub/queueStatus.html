@@ -1,0 +1,73 @@
+<html>
+  <head>
+    <style type="text/css">
+      .container {
+        background-color: #000000;
+        height: 1.125em;
+        padding: 1em;
+        width: 400px;
+      }
+      .status-text {
+        color: #ffffff;
+      }
+      .status-keyword {
+        color: #ff7f7f;
+      }
+      .queue-open .status-keyword {
+        color: #7fff7f;
+      }
+      .command-text {
+        opacity: 0;
+        color: #7f7f7f;
+      }
+      .queue-open .command-text {
+        opacity: 1;
+      }
+      .command-keyword {
+        color: #bfbf5f;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <span class="status-text">
+        The queue is currently <span class="status-keyword"></span>.
+      </span>
+      <span class="command-text">
+        Submit a level with <span class="command-keyword"></span>
+      </span>
+    </div>
+    <script language="javascript" type="text/javascript">
+      const params = new URLSearchParams(window.location.search);
+      const model = {
+        status: "",
+        command: ""
+      };
+      const updateView = () => {
+        document.getElementsByClassName("status-keyword")[0].innerHTML = model.status;
+        document.getElementsByClassName("command-keyword")[0].innerHTML = `${model.command} <i>levelId</i>`;
+        if (model.status === 'open') {
+          document.getElementsByClassName("container")[0].classList.add("queue-open");
+        } else {
+          document.getElementsByClassName("container")[0].classList.remove("queue-open");
+        }
+      };
+
+      (() => {
+        if (params.get("demo") === "true") {
+          model.status = "open";
+          model.command = "!add";
+          updateView();
+        } else {
+          const ws = new WebSocket(`ws://${window.location.host}/status`);
+          ws.onmessage = m => {
+            const data = JSON.parse(m.data);
+            model.status = data.status;
+            model.command = data.command;
+            updateView();
+          };
+        }
+      })();
+    </script>
+  </body>
+</html>

@@ -23,6 +23,7 @@
       <li><a href="#level-info">Level Info</a>
       <li><a href="#now-playing">Now Playing</a>
       <li><a href="#up-next">Up Next</a>
+      <li><a href="#queue-status">Queue Status</a>
     </ul>
 
     <hr>
@@ -90,6 +91,41 @@
             <p><dfn>level-name</dfn> The level name text.</p>
             <p><dfn>level-id</dfn> The level id text (the 7-digit code).</p>
             <p><dfn>submitted-by</dfn> The 'Submitted by &lt;name&gt;' text.<p>
+    <hr>
+
+    <a name="queue-status"><h1>Queue Status</h1></a>
+        <p>Show whether the queue is open or closed; and if open, indicate how
+           to add a level.</p>
+
+        <iframe width="450" height="70" src="./queueStatus.html?demo=true"></iframe>
+
+        <h2>Main URL</h2>
+            <span class="baseUrl"></span>/queueStatus.html
+
+        <h2>Query Parameters:</h2>
+            <p>None</p>
+
+        <h2>URL Aliases:</h2>
+            <p>None</p>
+
+        <h2>CSS Classes:</h2>
+            <p><dfn>container</dfn> The block containing all of the information
+               being diaplayed.  By default this is a simple block container
+               with a black background.<p>
+            <p><dfn>queue-open</dfn> This class is added to the container when
+               the status is "open"; by default this is combined with
+               <code>status-keyword</code> so that "open" appears green and
+               "closed" appears red.</p>
+            <p><dfn>status-text</dfn> The text "The queue is currently ___."
+               Note that the word in the blank ("open" or "closed") is more
+               specifically controlled by <code>status-keyword</code>.</p>
+            <p><dfn>status-keyword</dfn> The word showing the status of the
+               queue ("open" or "closed")</p>
+            <p><dfn>command-text</dfn> The text "Submit a level with ____"; by
+               default this is only shown when the queue is open.  Note that
+               the command text is more specifically controlled by
+               <code>command-keyword</code></p>
+            <p><dfn>command-keyword</dfn> The text of the "add" command</p>
     <hr>
 
     <script language="javascript" type="text/javascript">

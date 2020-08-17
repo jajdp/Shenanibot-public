@@ -56,7 +56,7 @@
         submittedBy: ""
       };
       const updateView = () => {
-        document.getElementsByClassName("level-id")[0].innerHTML = `${model.levelId}`;
+        document.getElementsByClassName("level-id")[0].innerHTML = model.levelId;
         document.getElementsByClassName("level-name")[0].innerHTML = model.levelName;
         if (model.submittedBy && model.submittedBy.trim().length) {
           document.getElementsByClassName("submitted-by")[0].innerHTML = `Submitted by ${model.submittedBy}`;
