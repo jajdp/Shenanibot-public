@@ -20,10 +20,13 @@
 
     <h1>Index</h1>
     <ul>
+      <li><a href="#full-queue">Full Queue</a>
       <li><a href="#level-info">Level Info</a>
+      <li><a herf="#level-range">Level Range</a>
       <li><a href="#now-playing">Now Playing</a>
-      <li><a href="#up-next">Up Next</a>
       <li><a href="#queue-status">Queue Status</a>
+      <li><a href="#random-pool">Random Pool</a>
+      <li><a href="#up-next">Up Next</a>
     </ul>
 
     <hr>
@@ -91,6 +94,85 @@
             <p><dfn>level-name</dfn> The level name text.</p>
             <p><dfn>level-id</dfn> The level id text (the 7-digit code).</p>
             <p><dfn>submitted-by</dfn> The 'Submitted by &lt;name&gt;' text.<p>
+    <hr>
+
+    <a name="level-range"><h1>Level Range</h1></a>
+        <p>Show a list (of some or all) of the levels in the queue.</p>
+
+        <iframe width="255" height="560" src="./levelRange.html?demo=true"></iframe>
+
+        <h2>Main URL</h2>
+            <span class="baseUrl"></span>/levelRange.html
+
+        <h2>Query Parameters:</h2>
+
+            <p><dfn>min_position</dfn> (number) The first level to include in
+               the list, based on order of the queue; default is 1.</p>
+            <p><dfn>max_position</dfn> (number) If specified, the last level to
+               include in the list, based on order of the queue; if omitted,
+               there is no limit to the number of levels listed, though they
+               might not all fit visibly on the screen.</p>
+            <p><dfn>skip_mark</dfn> (<code>true</code> or <code>false</code>)
+               Whether to filter out "markers" before counting to find
+               <code>min_position</code> and <code>max_position</code>.</p>
+            <p><dfn>end_mark</dfn> (number) If a positive integer N is
+               specified, then levels after the Nth marker (as well as the
+               marker itself) will not be included in the list (even if
+               <code>mas-position</code> has not been reached).  Markers before
+               <code>min_position</code> do not count toward this limit.
+               If 0 is specified (or if this paramter is omitted), then all
+               levels from <code>min_position</code> to
+               <code>max_position</code> are included.</p>
+
+        <h2>URL Aliases:</h2>
+
+        <ul>
+          <li><dfn><a name="full-queue"><span class="baseUrl"></span>/fullQueue.html</a></dfn> Lists all levels.  (<code>skip_mark</code> = <code>false</code> ; all other parameters omitted)
+          <li><dfn><a name="random-pool"><span class="baseUrl"></span>/randomPool.html</a></dfn> Lists the levels that could be pulled by the next <code>!random</code> command.  Note that the level at the top of the queue is not included, since it is already being played and would be dequeued by the <code>!random</code> command.  (<code>min_position</code> = 2 ; <code>skip_mark</code> = false ; <code>end_mark</code> = 1 ; all other parameters omitted)
+        </ul>
+        <h2>Notes:</h2>
+
+        <p>The queue can contain levels and/or "markers".  (A marker is placed
+        by the streamer with the <code>!mark</code> command; it represents a
+        time during which no level from the queue is being played.)</p>
+
+        <p>The <code>skip_mark</code> parmaeter determines whether markers are
+        counted when applying the <code>min_position</code> and
+        <code>max_position</code> parameters.</p>
+
+        <p>If <code>skip_mark</code> is <code>false</code>, then all queue
+        entries are counted; so a <code>min_position</code> of <i>N</i> means
+        to start the list with the <i>Nth</i> entry no matter what.  (For
+        example, if you're also using the <code>nowPlaying</code> and
+        <code>upNext</code> views, then <code>skip_mark</code> = 
+        <code>false</code> could be used along with <code>min_position</code> =
+        3 to skip over the levels whose information they already show.)
+
+        <p>If <code>skip_mark</code> is <code>true</code>, then marker entries
+        are not counted; so a <code>min_position</code> of <i>N</i> means to
+        start the list with the <i>Nth</i> actual level, even if one or more
+        "breaks between levels" are skipped over in the process.  The markers
+        do remain in the list, so they can still be used with
+        <code>end_mark</code>.</p>
+
+        <p>Whether markers are actually displayed is controlled via the CSS
+        rules.</p>
+
+        <p><code>end_mark</code> can be used to end the list just before a
+        specified marker.  For example, since the <code>!random</code> command
+        only pulls levels from between position 2 and the next marker, the
+        <code>randomPool</code> alias sets <code>end_mark</code> to 1.</p>
+
+        <h2>CSS Classes:</h2>
+            <p><dfn>container</dfn> The block containing all of the information
+               being diaplayed.  By default this is a column-oriented flex
+               container with a black background and a ridged border.<p>
+            <p><dfn>level</dfn> The information for each level in the list
+               will be inside a container with this class.</p>
+            <p><dfn>level-name</dfn> The names of listed levels</p>
+            <p><dfn>level-id</dfn> The ids of listed levels (in parens)</p>
+            <p><dfn>marker</dfn> For each marker in the list, there is a label
+               ("[ BREAK ]") identified by this class.<p>
     <hr>
 
     <a name="queue-status"><h1>Queue Status</h1></a>
