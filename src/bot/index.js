@@ -1,6 +1,7 @@
 const Rumpus = require("@bscotch/rumpus-ce");
 const ViewerLevel = require("./lib/level");
 const olServer = require("../overlay/server");
+const rewardHelper = require("../config/rewardHelper");
 
 class ShenaniBot {
   constructor(botOptions) {
@@ -11,34 +12,52 @@ class ShenaniBot {
     this.queueOpen = true;
     this.users = {};
     this.levels = {};
+    this.twitch = {
+      rewards: {
+      },
+      rewardBehaviors: botOptions.twitch.rewardBehaviors
+    };
   }
 
-  async command(command, username) {
-    if (!command.startsWith(this.options.prefix)) return "";
-    command = command.substring(this.options.prefix.length).split(" ");
+  async command(message, username, rewardId) {
+    const args = message.split(" ");
+    const command = args[0].startsWith(this.options.prefix)
+                  ? args[0].substring(this.options.prefix.length)
+                  : undefined;
+    if (! (command || rewardId)) {
+      return "";
+    }
 
     if (username === this.streamer) {
-      switch (command[0]) {
+      switch (command) {
         case "open":
           return this.openQueue();
         case "close":
           return this.closeQueue();
         case "permit":
-          return command[1] ? this.permitUser(command[1].toLowerCase()) : "";
+          return args[1] ? this.permitUser(args[1].toLowerCase()) : "";
         case "next":
           return this.nextLevel();
         case "random":
           return this.randomLevel();
         case "mark":
           return this.makeMarker();
+        case "reward":
+          return args[1] ? this.setReward(args[1].toLowerCase(), rewardId) : "";
+        case "noreward":
+          return args[1] ? this.unsetReward(args[1].toLowerCase()) : "";
       }
     }
 
-    switch (command[0]) {
+    if (rewardId) {
+      return this.processReward(rewardId, args, username);
+    }
+
+    switch (command) {
       case "add":
-        return command[1] ? this.addLevelToQueue(command[1], username) : "";
+        return args[1] ? this.addLevelToQueue(args[1], username) : "";
       case "remove":
-        return this.removeLevelFromQueue(command[1], username);
+        return args[1] ? this.removeLevelFromQueue(args[1], username) : "";
       case "queue":
         return this.showQueue();
       case "commands":
@@ -124,6 +143,82 @@ class ShenaniBot {
     this.queue.push(null);
     olServer.sendLevels(this.queue);
     let response = "A marker has been added to the queue.";
+    return response;
+  }
+
+  async setReward(rewardType, rewardId) {
+    const rewards = this.twitch.rewards;
+    const behaviors = this.twitch.rewardBehaviors;
+    if (!rewards[rewardType]) {
+      return `Unknown reward type: ${rewardType}; `
+           + "known types are: " + Object.keys(rewards).join(", ");
+    }
+    if (!rewardId) {
+      return "To configure a custom channel points reward to "
+           + rewards[rewardType]
+           + `, redeem the reward with the message '!reward ${rewardType}'`;
+    }
+    if (behaviors[rewardId]) {
+      if (behaviors[rewardId] === rewardType) {
+        return `That reward is already set up to ${rewards[rewardType]}`;
+      } else {
+        return "That reward is currently set up to "
+             + rewards[behaviors[rewardId]]
+             + "; if you want to change its behavior, first use "
+             + `'!noreward ${behaviors[rewardId]}'`;
+      }
+    }
+    if (Object.keys(behaviors).some(k => behaviors[k] === rewardType)) {
+      return `Another reward is already set up to ${rewards[rewardType]}; `
+           + "if you want to switch rewards for this behavior, first use "
+           + `'!noreward ${rewardType}'`;
+    }
+
+    behaviors[rewardId] = rewardType;
+
+    let response = "Registered reward to " + rewards[rewardType];
+    if (this.options.dataPath) {
+        rewardHelper.updateRewardConfigFile(behaviors);
+    } else {
+        const optName = rewardHelper.configKeyFor(rewardType);
+        response = response
+                 + "; to make this change persist, add the following line to "
+                 + "your ShenanaBot .env file:\n"
+                 + `${optName}="${rewardId}"\n`
+                 + `(If your .env file already has a value for ${optName}, `
+                 + "you'll need to remove it; multiple rewards cannot share "
+                 + "a behavior.)";
+    }
+    return response;
+  }
+
+  async unsetReward(rewardType) {
+    const rewards = this.twitch.rewards;
+    const behaviors = this.twitch.rewardBehaviors;
+
+    if (!rewards[rewardType]) {
+      return `Unknown reward type: ${rewardType}; `
+           + "known types are: " + Object.keys(rewards).join(", ");
+    }
+
+    const rewardId = Object.keys(behaviors)
+                           .find(k => behaviors[k] === rewardType);
+    if (!rewardId) {
+      return `No reward is set up to ${rewards[rewardType]}`
+    }
+
+    behaviors[rewardId] = undefined;
+
+    let response = "Removed reward to " + rewards[rewardType];
+    if (this.options.dataPath) {
+        rewardHelper.updateRewardConfigFile(behaviors);
+    } else {
+        const optName = rewardHelper.configKeyFor(rewardType);
+        response = response
+                 + "; to make this change persist, remove the following line "
+                 + "from your ShenanaBot .env file:\n"
+                 + `${optName}="${rewardId}"\n`;
+    }
     return response;
   }
 
@@ -240,7 +335,8 @@ class ShenaniBot {
   }
 
   showBotCommands() {
-    let response = `${this.options.prefix}add [levelcode], ${this.options.prefix}bot, ${this.options.prefix}queue`;
+    const prefix = this.options.prefix;
+    const response = `${prefix}add [levelcode], ${prefix}bot, ${prefix}queue, ${prefix}remove [levelcode]`;
     return response;
   }
 
@@ -248,6 +344,11 @@ class ShenaniBot {
     let response = `This bot was created for the LevelHead Community by jajdp and FantasmicGalaxy.
     Want to use it in your own stream? You can get it here: https://github.com/jajdp/Shenanibot-public`;
     return response;
+  }
+
+  processReward(rewardId, message, username) {
+    // todo: implement reward behaviors
+    return ""
   }
 
   _getUser(username) {
