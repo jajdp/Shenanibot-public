@@ -91,7 +91,7 @@ class ShenaniBot {
   randomLevel() {
     let {empty, response} = this._dequeueLevel();
     if (!empty) {
-      let index = Math.round(Math.random() * (this.queue.length - 1));
+      let index = Math.floor(Math.random() * this.queue.length);
       let randomLevel = this.queue[index];
       this.queue.splice(index, 1)
       this.queue.unshift(randomLevel);
