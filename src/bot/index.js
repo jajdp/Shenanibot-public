@@ -282,28 +282,25 @@ class ShenaniBot {
       return response;
     }
 
-    for (let i = 0; i < this.queue.length; i++) {
-      const level = this.queue[i];
-
-      if (level.levelId === levelId) {
-        if (level.submittedBy === username || this.streamer === username) {
-          if (i === 0) {
-            response = "You can't remove the current level from the queue!";
-            return response;
-          }
-          
-          this._removeFromQueue(i);
-          olServer.sendLevels(this.queue);
-          response = `${level.levelName}@${level.levelId} was removed from the queue!`;
-          this.levels[levelId] = (username === this.streamer) ? `was removed by ${username}; it can't be re-added` : null;
-          return response;
-        } else {
-          response = "You can't remove a level from the queue that you didn't submit!";
-          return response;
-        }
-      }
+    const i = this._findLevelInQueue(levelId);
+    if (i === null) {
+      return "The level you tried to remove is not in the queue";
     }
-    response = "The level you tried to remove doesn't exist :(";
+
+    const level = this.queue[i];
+
+    if (level.submittedBy !== username && this.streamer !== username) {
+      return "You can't remove a level from the queue that you didn't submit!";
+    }
+    if (i === 0) {
+      return "You can't remove the current level from the queue!";
+    }
+
+    this._removeFromQueue(i);
+    olServer.sendLevels(this.queue);
+    response = `${level.levelName}@${level.levelId} was removed from the queue!`;
+    this.levels[levelId] = (username === this.streamer) ? `was removed by ${username}; it can't be re-added` : null;
+
     return response;
   }
 
@@ -374,7 +371,7 @@ class ShenaniBot {
       this.levels[this.queue[0].levelId] = "was already played";
     }
     this._removeFromQueue(0);
-    
+
     return {
       empty: !this.queue.length,
       response: (!this.queue.length) ? "The queue is now empty." : null
@@ -397,6 +394,15 @@ class ShenaniBot {
       };
     }
     return {valid: true, response: null};
+  }
+
+  _findLevelInQueue(levelId) {
+    for (let i = 0; i < this.queue.length; i++) {
+      if (this.queue[i] && this.queue[i].levelId === levelId) {
+        return i;
+      }
+    }
+    return null;
   }
 
   _removeFromQueue(index) {
