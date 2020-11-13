@@ -119,8 +119,8 @@ class ShenaniBot {
     if (!empty) {
       const markerIndex = this.queue.indexOf(null);
       if (markerIndex !== 0) {
-        const maxIndex = ((markerIndex > -1) ? markerIndex : this.queue.length) - 1;
-        const index = Math.round(Math.random() * maxIndex);
+        const maxIndex = (markerIndex > -1) ? markerIndex : this.queue.length;
+        const index = Math.floor(Math.random() * maxIndex);
         let randomLevel = this.queue[index];
         this.queue.splice(index, 1)
         this.queue.unshift(randomLevel);
