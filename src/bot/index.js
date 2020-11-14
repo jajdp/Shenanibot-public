@@ -14,6 +14,7 @@ class ShenaniBot {
     this.levels = {};
     this.twitch = {
       rewards: {
+        urgent: "move a level to the front of the queue"
       },
       rewardBehaviors: botOptions.twitch.rewardBehaviors
     };
@@ -236,7 +237,8 @@ class ShenaniBot {
     }
 
     if (this.options.levelLimit > 0 && user.levelsSubmitted >= this.options.levelLimit && !user.permit) {
-      response = "Oops, you have submitted the maximum number of levels!";
+      response = "You have submitted the maximum number of levels!";
+      
       return response;
     }
 
@@ -260,7 +262,7 @@ class ShenaniBot {
       user.levelsSubmitted++;
       user.permit = (username === this.streamer);
 
-      response = `${level.levelName}@${level.levelId} was added! Your level is #${this.queue.length} in queue.`;
+      response = `${level.levelName}@${level.levelId} was added! Your level is #${this.queue.length} in the queue.`;
       response = this.options.levelLimit > 0 ? `${response} Submission ${user.levelsSubmitted}/${this.options.levelLimit}` : response;
 
       if (this.queue.length === 1) {
@@ -282,8 +284,8 @@ class ShenaniBot {
       return response;
     }
 
-    const i = this._findLevelInQueue(levelId);
-    if (i === null) {
+    const i = this.queue.findIndex(l => l && l.levelId === levelId);
+    if (i === -1) {
       return "The level you tried to remove is not in the queue";
     }
 
@@ -344,8 +346,43 @@ class ShenaniBot {
   }
 
   processReward(rewardId, message, username) {
-    // todo: implement reward behaviors
-    return ""
+    switch (this.twitch.rewardBehaviors[rewardId]) {
+      case "urgent":
+        return this._processUrgentReward(message[0]);
+    }
+    return "";
+  }
+
+  _processUrgentReward(levelId) {
+    const { level, response } = this._getQueuedLevelForReward(levelId);
+    if (!level) {
+      return response;
+    }
+    level.priority = true;
+    let newIndex = this.queue.findIndex(
+                  (level, index) => index && (!level || !level.priority));
+    if (newIndex === -1) {
+      newIndex = this.queue.length;
+    }
+    this.queue.splice(newIndex, 0, level);
+    return `${level.levelName}@${level.levelId} was marked as urgent! It is now #${newIndex + 1} in the queue.`;
+  }
+
+  _getQueuedLevelForReward(levelId) {
+    let response;
+    const i = this.queue.findIndex(l => l && l.levelId === levelId);
+
+    if (i === 0) {
+      response = "You can't change priority of the level being played!";
+    } else if (i === -1) {
+      response = "That level is not in the queue!";
+    }
+
+    return {
+      level: i > 0 ? this.queue.splice(i, 1)[0] : null,
+      index: i,
+      response
+    };
   }
 
   _getUser(username) {
@@ -394,15 +431,6 @@ class ShenaniBot {
       };
     }
     return {valid: true, response: null};
-  }
-
-  _findLevelInQueue(levelId) {
-    for (let i = 0; i < this.queue.length; i++) {
-      if (this.queue[i] && this.queue[i].levelId === levelId) {
-        return i;
-      }
-    }
-    return null;
   }
 
   _removeFromQueue(index) {
