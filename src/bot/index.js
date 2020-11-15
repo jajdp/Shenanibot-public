@@ -17,9 +17,16 @@ class ShenaniBot {
         urgent: "move a level to the front of the queue",
         priority: "move a level to the front of its group",
         expedite: "move a level up one place in the queue",
+        add: "add a level to the queue",
       },
-      rewardBehaviors: botOptions.twitch.rewardBehaviors
+      rewardBehaviors: botOptions.twitch.rewardBehaviors,
+      usePointsToAdd: false,
     };
+
+    const behaviors = botOptions.twitch.rewardBehaviors;
+    if (Object.keys(behaviors).find(k => behaviors[k] === 'add')) {
+      this.twitch.usePointsToAdd = true;
+    }
   }
 
   async command(message, username, rewardId) {
@@ -178,6 +185,9 @@ class ShenaniBot {
     }
 
     behaviors[rewardId] = rewardType;
+    if (rewardType === 'add') {
+      this.twitch.usePointsToAdd = true;
+    }
 
     let response = "Registered reward to " + rewards[rewardType];
     if (this.options.dataPath) {
@@ -211,6 +221,9 @@ class ShenaniBot {
     }
 
     behaviors[rewardId] = undefined;
+    if (rewardType === 'add') {
+      this.twitch.usePointsToAdd = false;
+    }
 
     let response = "Removed reward to " + rewards[rewardType];
     if (this.options.dataPath) {
@@ -225,11 +238,16 @@ class ShenaniBot {
     return response;
   }
 
-  async addLevelToQueue(levelId, username) {
+  async addLevelToQueue(levelId, username, rewardType) {
     const user = this._getUser(username);
 
     if (!this.queueOpen && !user.permit) {
       let response = "Sorry, queue is closed!";
+      return response;
+    }
+
+    if (this.twitch.usePointsToAdd && !rewardType) {
+      let response = "Please use channel points to add levels.";
       return response;
     }
 
@@ -355,6 +373,11 @@ class ShenaniBot {
         return this._processPriorityReward(message[0]);
       case "expedite":
         return this._processExpediteReward(message[0]);
+      case "add":
+        const levelId = message[
+          (message[0] === `${this.options.prefix}add`) ? 1 : 0
+        ];
+        return this.addLevelToQueue(levelId, username, 'add');
     }
     return "";
   }
