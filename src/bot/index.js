@@ -18,6 +18,7 @@ class ShenaniBot {
         priority: "move a level to the front of its group",
         expedite: "move a level up one place in the queue",
         add: "add a level to the queue",
+        unlimit: "ignore limit when adding a level",
       },
       rewardBehaviors: botOptions.twitch.rewardBehaviors,
       usePointsToAdd: false,
@@ -256,7 +257,7 @@ class ShenaniBot {
       return response;
     }
 
-    if (this.options.levelLimit > 0 && user.levelsSubmitted >= this.options.levelLimit && !user.permit) {
+    if (this.options.levelLimit > 0 && user.levelsSubmitted >= this.options.levelLimit && !user.permit && rewardType !== 'unlimit') {
       response = "You have submitted the maximum number of levels!";
 
       return response;
@@ -366,7 +367,8 @@ class ShenaniBot {
   }
 
   processReward(rewardId, message, username) {
-    switch (this.twitch.rewardBehaviors[rewardId]) {
+    const behavior = this.twitch.rewardBehaviors[rewardId];
+    switch (behavior) {
       case "urgent":
         return this._processUrgentReward(message[0]);
       case "priority":
@@ -374,10 +376,11 @@ class ShenaniBot {
       case "expedite":
         return this._processExpediteReward(message[0]);
       case "add":
+      case "unlimit":
         const levelId = message[
           (message[0] === `${this.options.prefix}add`) ? 1 : 0
         ];
-        return this.addLevelToQueue(levelId, username, 'add');
+        return this.addLevelToQueue(levelId, username, behavior);
     }
     return "";
   }
