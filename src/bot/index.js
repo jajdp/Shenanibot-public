@@ -14,7 +14,8 @@ class ShenaniBot {
     this.levels = {};
     this.twitch = {
       rewards: {
-        urgent: "move a level to the front of the queue"
+        urgent: "move a level to the front of the queue",
+        priority: "move a level to the front of its group",
       },
       rewardBehaviors: botOptions.twitch.rewardBehaviors
     };
@@ -238,7 +239,7 @@ class ShenaniBot {
 
     if (this.options.levelLimit > 0 && user.levelsSubmitted >= this.options.levelLimit && !user.permit) {
       response = "You have submitted the maximum number of levels!";
-      
+
       return response;
     }
 
@@ -349,6 +350,8 @@ class ShenaniBot {
     switch (this.twitch.rewardBehaviors[rewardId]) {
       case "urgent":
         return this._processUrgentReward(message[0]);
+      case "priority":
+        return this._processPriorityReward(message[0]);
     }
     return "";
   }
@@ -365,7 +368,24 @@ class ShenaniBot {
       newIndex = this.queue.length;
     }
     this.queue.splice(newIndex, 0, level);
-    return `${level.levelName}@${level.levelId} was marked as urgent! It is now #${newIndex + 1} in the queue.`;
+    return `${level.levelName}@${level.levelId} was marked as priority! It is now #${newIndex + 1} in the queue.`;
+  }
+
+  _processPriorityReward(levelId) {
+    const { level, index, response } = this._getQueuedLevelForReward(levelId);
+    if (!level) {
+      return response;
+    }
+    level.priority = true;
+    let i;
+    for (i = index - 1; i > 0; i--) {
+      if (!this.queue[i] || this.queue[i].priority) {
+        break;
+      }
+    }
+    const newIndex = i + 1;
+    this.queue.splice(newIndex, 0, level);
+    return `${level.levelName}@${level.levelId} was marked as priority! It is now #${newIndex + 1} in the queue.`;
   }
 
   _getQueuedLevelForReward(levelId) {
