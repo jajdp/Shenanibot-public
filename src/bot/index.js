@@ -16,6 +16,7 @@ class ShenaniBot {
       rewards: {
         urgent: "move a level to the front of the queue",
         priority: "move a level to the front of its group",
+        expedite: "move a level up one place in the queue",
       },
       rewardBehaviors: botOptions.twitch.rewardBehaviors
     };
@@ -352,6 +353,8 @@ class ShenaniBot {
         return this._processUrgentReward(message[0]);
       case "priority":
         return this._processPriorityReward(message[0]);
+      case "expedite":
+        return this._processExpediteReward(message[0]);
     }
     return "";
   }
@@ -386,6 +389,27 @@ class ShenaniBot {
     const newIndex = i + 1;
     this.queue.splice(newIndex, 0, level);
     return `${level.levelName}@${level.levelId} was marked as priority! It is now #${newIndex + 1} in the queue.`;
+  }
+
+  _processExpediteReward(levelId) {
+    let { level, index, response } = this._getQueuedLevelForReward(levelId);
+    if (!level) {
+      return response;
+    } 
+
+    if (index === 1) {
+      response = "You can't expedite a level that's already next to be played."
+    } else if (!this.queue[index - 1]) {
+      response = "You can't expedite a level that's right after a break in the queue."
+    } else if (this.queue[index - 1].priority && !level.priority) {
+      response = "You can't expedite a normal-priority level that's right after a high-priority level."
+    } else {
+      response = `${level.levelName}@${level.levelId} was expedited! It is now #${index} in the queue.`;
+      index -= 1;
+    }
+
+    this.queue.splice(index, 0, level);
+    return response;
   }
 
   _getQueuedLevelForReward(levelId) {
