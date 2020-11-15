@@ -10,8 +10,10 @@ The bot stores a list of viewer-submitted levelcodes for you to play, and automa
 `!close` : Closes the queue  
 `!permit [user name]` : Allows a user to add one level to the queue even if it is closed or they have reached the submission limit  
 `!next` : Moves the queue forward a level  
-`!random` : Chooses a random level from the queue and puts it at the front of the queue to play  
+`!random` : Chooses a random level from the queue and puts it at the front of the queue to play; if there are "high priority" levels available to be chosen (i.e. as a result of channel point reward redemptions), these will be chosen before any non-priority levels
 `!mark` : Place a marker in the queue.  Markers do two things:  First, they occupy a spot in the queue to allow for situations with no "now playing" level.  For example, if you don't want the first submitted level to immediately move to "now playing", you can insert a marker before opening the queue.  Second, `!random` will only consider levels up to the next marker.  (That is, if the top of the queue is a marker, it will be discarded as normal; but then a level will be chosen from those that are before the subsequent marker in the queue.)  
+ `!reward [reward behavior]` : Sets up a channel points reward.  Unlike other commands, this must be sent as the message for a custom channel points reward; it assigns a behavior to that particular custom reward.  See [Channel Points Integration](#channel-points-integration) for details.
+ `!noreward [reward behavior]` : Removes the assignment of a reward behavior from whatever custom reward currently has that behavior
   
 **Viewer Commands**  
 `!add [level code]` : Adds a level to the level queue  
@@ -110,6 +112,16 @@ The bot can provide a web server to display information about the queue.  The pa
 
 For details on the available views and how to customize them, start up the bot and navigate a web browser to the URL it provides (http://localhost:8080 by default).
 
+### Data Path
+If you are running the bot locally, then you can specify a directory where data can be written.  The default of `.` will place the files in the directory where you've installed the bot (assuming you launch it from that directory).
+
+If you are using a remote hosting service to run the bot, then you will most likely need to leave this setting undefined.  (If the service you use offers persistent storage, you would need to consult their docs for a path to use to access that storage.)  When this is undefined, features that would require local storage may not be available or may not work as well.  The documentation for such features will spell out the limitations.
+
+`DATA_PATH=.`
+
+### Channel Point Reward Settings
+If `DATA_PATH` is not set, then the `!reward` command will respond with information for you to add to the `.env` file.  (If `DATA_PATH` is set, then the `!reward` command will automatically write the required information to a file in that location and the corresponding `.env` settings will be ignored.  This means that if you set `DATA_PATH` after configuring rewards in `.env`, they will have to be reconfigured after setting `DATA_PATH`; but it avoids potentially frustrating problems with old settings being restored when restarting ShenaniBot.)
+
 ---
 ## Results
 The final file should now look something like this: (**Note:** It does **not** matter what order the parameters are in)
@@ -144,6 +156,43 @@ Each time you run the bot, you'll have to naviagate in the terminal to the root 
 `node .`
 
 Then the terminal window will show the connection process to your Twitch channel and greets you with `"Bot Online!"`
+
+## Channel Points Integration
+If you are a Twitch affiliate or partner, you can configure the bot to listen for custom channel point reward redemptions using the `!reward` command.
+
+If you have configured `DATA_PATH` such that the bot can store persistent data, then the bot will automatically remember the rewards you configure.  Otherwise, the `!reward` command will give you inforamtion to add to your `.env` file so that reward configuration can be reloaded whenever you restart the bot.  (This is necessary because each streamer's rewards will have their own `custom-reward-id` values, which the bot needs to know in order to respond to the correct reward redemptions.)
+
+The first step is to define a custom channel points reward for your Twitch channel.  The bot doesn't really care how you set the reward up, except the setting for Require Viewer to Enter Text must be enabled.  (This is necessary in order for the bot to see reward redemptions, and also is how the user will specify a level to be affected by the reward.)
+
+It is not recommended to set the reward to skip the Reward Requests Queue.  The bot will attempt to fulfill the redemption automatically when it is first submitted regardless of this setting, but if the request is invalid (e.g. bad level code) the bot will have no way to refund the points; so if you want the option to refund errant redemptions, they need to go into the queue where you can handle refunds manually.
+
+Also be aware that you may want to disable these rewards when not playing Levelhead, when the bot is not active, or when they wouldn't be applicable.  (For example, perhaps you've defined a reward with the `expedite` behavior; if you're playing a group of levels in random order then during that time you might disable that reward.)
+
+Once you've created the custom reward in Twitch, you can use the `!reward` command to associate a specific behavior to the reward.  Each behavior can be associated with a single reward, and each reward can only be associated with a single behavior; but by setting up multiple rewards you can offer any or all of the behaviors described below.
+
+So for example you can give the command `!reward priority` to tell the bot you want to assocaite a custom reward with the `priority` behavior so that users can have their levels played sooner in exchange for channel points.  (Note that you give this command by redeeming a custom reward with the message `!reward priority`, and then once this is done, viewers can redeem the reward with a level code for a level that is in the queue.)
+
+If `DATA_PATH` is not defined, the bot will output a line of code to be added to the `.env` file.  The reward will be associated with the behavior for the current session, but you'll need to update `.env` before the next time you restart the bot in order for the reward behavior to be remembered.
+
+You can use `!noreward` to remove the association of a behavior from a reward.  Again if `DATA_PATH` is not configured then you'll have to update `.env` for the chnage to be remembered.
+
+### Behaviors
+
+`urgent` - Mark a level as "high priority" and move it to the front of the queue subject to the following rules:  The "now playing" level is not affected.  If there are other "high priority" levels at the front of the queue, the level is added after them.  The level must already be in the queue.
+
+Note that a reward with this behavior will allow levels to skip ahead of markers; so levels can be placed ahead of planned breaks from the queue, or they can be added to the existing pool of levels for `!random` (and will be chosen before any non-priority levels in the pool).  This is a suitable behavior if you want to allow viewers to occasionally ask you to play a level right away because they need to leave soon; generally you would attach a high cost to rewards with this behavior.
+
+`priority` - Mark a level as "high priority" and move it up in the queue subject to the following rules:  The "now playing" level is not affected.  The level can not move up past a marker.  The level cannot move up past another "high priority" level.  The level must already be in the queue.
+
+Unlike `urgent`, `priority` will not move a level past a marker; so if you use markers to play "batches" of levels, this moves a level to the front of its batch rather than the front of the entire queue.
+
+`expedite` - Move a level up one space in the queue, provided this would not affect a marker, a "high priority" level (unless the level being expedited is itself "high priority"), or the "now playing" level.  The level must already be in the queue.
+
+This does not mark the expedited level as "high priority".  While this may be suitable as a lower-cost reward, it could potentially lead to a "tug of war" where two users each have a level in the queue and each repeatedly use this reward to move their level ahead of the other.
+
+`unlimit` - Add the level to the queue even if the submission limit for the user would be exceeded by doing so.  All other requirements for the user to be allowed to submit the level must be met (i.e. the queue must be open unless `!permit` has been granted to the user; the level cannot already have been played or removed by the streamer).
+
+`add` - Add the level to the queue assuming all requirements for the user to be allowed to submit the level are met.  If a reward is associated with this behavior, then the regular `!add` command is disabled and levels can only be submitted by spending channel points.
 
 ## Lastly...
 Feel free to study JavaScript and understand the code behind the Shenanibot. Make sure to edit and modify it as much as you need or want. And if you change it, feel free to help us make the bot better by sharing your code with us. Cheers!
