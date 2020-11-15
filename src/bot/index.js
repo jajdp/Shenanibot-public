@@ -130,8 +130,14 @@ class ShenaniBot {
     if (!empty) {
       const markerIndex = this.queue.indexOf(null);
       if (markerIndex !== 0) {
-        const maxIndex = (markerIndex > -1) ? markerIndex : this.queue.length;
-        const index = Math.floor(Math.random() * maxIndex);
+        let groupLength = (markerIndex > -1) ? markerIndex : this.queue.length;
+
+        const noPriorityIndex = this.queue.findIndex(l => !l || !l.priority);
+        if (noPriorityIndex > 0) {
+          groupLength = noPriorityIndex;
+        }
+
+        const index = Math.floor(Math.random() * groupLength);
         let randomLevel = this.queue[index];
         this.queue.splice(index, 1)
         this.queue.unshift(randomLevel);
@@ -259,7 +265,6 @@ class ShenaniBot {
 
     if (this.options.levelLimit > 0 && user.levelsSubmitted >= this.options.levelLimit && !user.permit && rewardType !== 'unlimit') {
       response = "You have submitted the maximum number of levels!";
-
       return response;
     }
 
