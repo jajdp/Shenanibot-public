@@ -65,6 +65,8 @@ class ShenaniBot {
     }
 
     switch (command) {
+      case "check":
+        return args[1] ? this.checkLevel(args[1]) : "";
       case "add":
         return args[1] ? this.addLevelToQueue(args[1], username) : "";
       case "remove":
@@ -245,6 +247,35 @@ class ShenaniBot {
     return response;
   }
 
+  async checkLevel(levelId) {
+    let {valid, response} = this._validateLevelId(levelId)
+    if (!valid) {
+      return response;
+    }
+
+    let levelInfo = await this.rce.levelhead.levels.search({ levelIds: levelId, includeAliases: true, includeMyInteractions: true } );
+
+    if (!levelInfo.length) {
+      response = "Oops! That level does not exist!";
+      return response;
+    }
+
+    const level = levelInfo[0];
+    const interactions = level.interactions;
+    let verb = 'not played';
+    if (interactions) {
+      if (interactions.played) {
+        verb = 'played';
+      }
+      if (interactions.completed) {
+        verb = 'beaten';
+      }
+    }
+
+    response = `${this.streamer} has ${verb} ${level.title}@${level.levelId}.`;
+    return response;
+  }
+
   async addLevelToQueue(levelId, username, rewardType) {
     const user = this._getUser(username);
 
@@ -279,32 +310,31 @@ class ShenaniBot {
 
     let levelInfo = await this.rce.levelhead.levels.search({ levelIds: levelId, includeAliases: true }, { doNotUseKey: true });
 
-    try {
-      let level = new ViewerLevel(
-        levelInfo[0].levelId,
-        levelInfo[0].title,
-        username
-      );
-      this.queue.push(level);
-      olServer.sendLevels(this.queue);
-
-      user.levelsSubmitted++;
-      user.permit = (username === this.streamer);
-
-      response = `${level.levelName}@${level.levelId} was added! Your level is #${this.queue.length} in the queue.`;
-      response = this.options.levelLimit > 0 ? `${response} Submission ${user.levelsSubmitted}/${this.options.levelLimit}` : response;
-
-      if (this.queue.length === 1) {
-        response = `${response}\n${this._playLevel()}`;
-      }
-
-      this.levels[levelInfo[0].levelId] = "is already in the queue";
-      return response;
-    } catch (error) {
-      console.error(error);
+    if (!levelInfo.length) {
       response = "Oops! That level does not exist!";
       return response;
     }
+
+    let level = new ViewerLevel(
+      levelInfo[0].levelId,
+      levelInfo[0].title,
+      username
+    );
+    this.queue.push(level);
+    olServer.sendLevels(this.queue);
+
+    user.levelsSubmitted++;
+    user.permit = (username === this.streamer);
+
+    response = `${level.levelName}@${level.levelId} was added! Your level is #${this.queue.length} in the queue.`;
+    response = this.options.levelLimit > 0 ? `${response} Submission ${user.levelsSubmitted}/${this.options.levelLimit}` : response;
+
+    if (this.queue.length === 1) {
+      response = `${response}\n${this._playLevel()}`;
+    }
+
+    this.levels[levelInfo[0].levelId] = "is already in the queue";
+    return response;
   }
 
   removeLevelFromQueue(levelId, username) {
@@ -364,7 +394,7 @@ class ShenaniBot {
 
   showBotCommands() {
     const prefix = this.options.prefix;
-    const response = `${prefix}add [levelcode], ${prefix}bot, ${prefix}queue, ${prefix}remove [levelcode]`;
+    const response = `${prefix}add [levelcode], ${prefix}bot, ${prefix}check [levelcode], ${prefix}queue, ${prefix}remove [levelcode]`;
     return response;
   }
 
