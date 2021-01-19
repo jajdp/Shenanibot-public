@@ -265,6 +265,9 @@ class ShenaniBot {
 
     if (this.options.levelLimit > 0 && user.levelsSubmitted >= this.options.levelLimit && !user.permit && rewardType !== 'unlimit') {
       response = "You have submitted the maximum number of levels!";
+      if (this.options.levelLimitType === "active") {
+        response += " (You can add more when one of yours has been played.)";
+      }
       return response;
     }
 
