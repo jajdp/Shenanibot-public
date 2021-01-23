@@ -12,6 +12,7 @@ const delegationToken = process.env.DELEGATION_TOKEN;
 const prefix = process.env.PREFIX || '!';
 const levelLimit = process.env.LEVEL_LIMIT || 0;
 const levelLimitType = (process.env.LEVEL_LIMIT_TYPE || 'active').toLowerCase();
+const priority = (process.env.PRIORITY || 'fifo').toLowerCase();
 const useThrottle = (process.env.USE_THROTTLE || 'false').toLowerCase() === 'true';
 
 const overlayPort = ((process.env.USE_OVERLAY || 'false').toLowerCase() === 'true') ? (process.env.OVERLAY_PORT || 8080) : null;
@@ -31,6 +32,7 @@ module.exports = {
     prefix,
     levelLimit,
     levelLimitType,
+    priority,
     useThrottle,
     overlayPort,
     dataPath

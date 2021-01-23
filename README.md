@@ -10,8 +10,8 @@ The bot stores a list of viewer-submitted levelcodes for you to play, and automa
 `!close` : Closes the queue  
 `!permit [user name]` : Allows a user to add one level to the queue even if it is closed or they have reached the submission limit  
 `!next` : Moves the queue forward a level  
-`!random` : Chooses a random level from the queue and puts it at the front of the queue to play; if there are "high priority" levels available to be chosen (i.e. as a result of channel point reward redemptions), these will be chosen before any non-priority levels
-`!mark` : Place a marker in the queue.  Markers do two things:  First, they occupy a spot in the queue to allow for situations with no "now playing" level.  For example, if you don't want the first submitted level to immediately move to "now playing", you can insert a marker before opening the queue.  Second, `!random` will only consider levels up to the next marker.  (That is, if the top of the queue is a marker, it will be discarded as normal; but then a level will be chosen from those that are before the subsequent marker in the queue.)  
+`!random` : Chooses a random level from the queue and puts it at the front of the queue to play.  If there are markers in the queue, a level will be chosen from before the first marker.  If priority rules other than order have been applied to the queue, this command respects them; so the chosen level will always be one of thoes with the highest priority
+`!mark` : Place a marker in the queue.  See [Using Markers](#using-markers) for details.
  `!reward [reward behavior]` : Sets up a channel points reward.  Unlike other commands, this must be sent as the message for a custom channel points reward; it assigns a behavior to that particular custom reward.  See [Channel Points Integration](#channel-points-integration) for details.
  `!noreward [reward behavior]` : Removes the assignment of a reward behavior from whatever custom reward currently has that behavior
   
@@ -99,6 +99,15 @@ This option controls how the `LEVEL_LIMIT` option works.  It can be set to `sess
 
 `LEVEL_LIMIT_TYPE="active"`
 
+### Priority Mode
+This option allows you to change the default order in which levels will be played.  (This order may still be affected by any configured channel point rewards.)
+
+The default `PRIORITY` mode is "fifo", meaning "first in first out" - level order is determined by order of submission.  This mode does not prioritize levels for purposes of the !random command; it can pick levels in any order (subject to the rules for markers and channel point rewards).
+
+If `PRIORITY` is set to "rotation", then levels are divided into "rounds".  A player can only add one level per round; additional submissions are automatically moved to future rounds.  All levels from one round will be played before moving on to the next round.  (!next will follow a rotation, while !random will choose any level from the current round, subject to rules for markers and channel point rewards.)  Note that configured channel point rewards could be used to add a level to the current round even though the player already has a level in the current round.
+
+`PRIORITY="fifo"
+
 ### Twitch Message Throttling
 If you want to limit the rate at which the bot sends twitch chat messages, you can enable this option.  This can be useful to prevent an active chat (or potentially an attacker) from causeing the bot to spam or, in extreme cases, to be disconnected by Twitch anti-spam measures.
 
@@ -158,6 +167,21 @@ Each time you run the bot, you'll have to naviagate in the terminal to the root 
 
 Then the terminal window will show the connection process to your Twitch channel and greets you with `"Bot Online!"`
 
+## Using Markers
+Markers create "breaks" in the queue.  This can be used in a couple different ways.
+
+Markers occupy a spot in the queue.  When a marker reaches the top of the queue, no level from the queue will be bookmarked and the queue will report that no level is currently being played.  This can be used to prevent the first submission from automatically moving to "now playing" - e.g. if you want to use `!random` to shuffle the levels.  It also allows for planned breaks from viewer levels - such as for workshop sessions, tower trials, non-LH segments, etc.
+
+Additionally, `!random` will only consider levels up to the next marker.  (That is, if the top of the queue is a marker, it will be discarded as normal; but then a level will be chosen from those that are before the subsequent marker in the queue.)  
+
+### Markers and Priority Mode
+
+With the default (`fifo`) priority mode, the behavior of markers is fairly straightforward.  Other priority modes change the order in which levels are played, but the positions of markers are unaffected by this process.
+
+For example, suppose you have `PRIORITY` set to `rotation`.  One viewer has `!add`ed levels A and B to the qeueue; level A is in the "current round", and level B is in the "next round".  If you then place a marker, this schedules a break to occur after you've played two levels.  If a new viewer then submits level C, it will be added to the "current round"; it will be played after level A but before level B.  The break is scheduled to occur after two levels and the marker doesn't move; so level C is played after level A, then the break occurs, then level B is played.
+
+This is intended to make breaks that are scheduled using markers as predictaable as possible; the only time the number of levels to be played before a scheduled break would increase is if you've configured a channel points reward with the `urgent` behavior.
+
 ## Channel Points Integration
 If you are a Twitch affiliate or partner, you can configure the bot to listen for custom channel point reward redemptions using the `!reward` command.
 
@@ -181,13 +205,15 @@ You can use `!noreward` to remove the association of a behavior from a reward.  
 
 `urgent` - Mark a level as "high priority" and move it to the front of the queue subject to the following rules:  The "now playing" level is not affected.  If there are other "high priority" levels at the front of the queue, the level is added after them.  The level must already be in the queue.
 
+If `PRIORITY` is set to "rotation", the level's round assignment may change to be consistent with its new location in the queue.  However, for purposes of deciding what round the viewer's next submission would be added to, the level is still considered to occupy their spot in the round to which it was originally assigned.
+
 Note that a reward with this behavior will allow levels to skip ahead of markers; so levels can be placed ahead of planned breaks from the queue, or they can be added to the existing pool of levels for `!random` (and will be chosen before any non-priority levels in the pool).  This is a suitable behavior if you want to allow viewers to occasionally ask you to play a level right away because they need to leave soon; generally you would attach a high cost to rewards with this behavior.
 
-`priority` - Mark a level as "high priority" and move it up in the queue subject to the following rules:  The "now playing" level is not affected.  The level can not move up past a marker.  The level cannot move up past another "high priority" level.  The level must already be in the queue.
+`priority` - Mark a level as "high priority" and move it up in the queue subject to the following rules:  The "now playing" level is not affected.  The level can not move up past a marker.  The level cannot move up past another "high priority" level.  The level must already be in the queue.  If `PRIORITY` is set to "rotation", the level cannot move up into an earlier round.
 
-Unlike `urgent`, `priority` will not move a level past a marker; so if you use markers to play "batches" of levels, this moves a level to the front of its batch rather than the front of the entire queue.
+Unlike `urgent`, `priority` will not move a level past a marker; so if you use markers to play "batches" of levels, this moves a level to the front of its batch rather than the front of the entire queue.  Similarly, in "rotation" mode, this moves a level to the front of its round.
 
-`expedite` - Move a level up one space in the queue, provided this would not affect a marker, a "high priority" level (unless the level being expedited is itself "high priority"), or the "now playing" level.  The level must already be in the queue.
+`expedite` - Move a level up one space in the queue, provided this would not affect a marker, a "high priority" level (unless the level being expedited is itself "high priority"), or the "now playing" level.  The level must already be in the queue.  If `PRIORITY` is set to "rotation", this cannot move a level into an earlier round.
 
 This does not mark the expedited level as "high priority".  While this may be suitable as a lower-cost reward, it could potentially lead to a "tug of war" where two users each have a level in the queue and each repeatedly use this reward to move their level ahead of the other.
 
