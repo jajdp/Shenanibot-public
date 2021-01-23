@@ -383,8 +383,13 @@ class ShenaniBot {
     let limit = Math.min(10, this.queue.length);
     let maxIndex = limit - 1;
     let response = '';
+    let round = 0;
     for (let i = 0; i <= maxIndex; i++) {
       const level = this.queue[i];
+      if (this.options.priority === 'rotation' && level.round > round) {
+        round = level.round;
+        response = `${response} **Round ${round}** :`;
+      }
       if (level) {
         response = `${response} [${level.levelName}@${level.levelId}]`;
       } else {
