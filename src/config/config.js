@@ -1,3 +1,5 @@
+const rewardHelper = require('./rewardHelper');
+
 require('dotenv').config();
 // this file basically just gets all the stuff from the .env file and makes it easier to access
 
@@ -14,6 +16,9 @@ const useThrottle = (process.env.USE_THROTTLE || 'false').toLowerCase() === 'tru
 
 const overlayPort = ((process.env.USE_OVERLAY || 'false').toLowerCase() === 'true') ? (process.env.OVERLAY_PORT || 8080) : null;
 
+const dataPath = process.env.DATA_PATH;
+const twitchRewards = rewardHelper.loadRewardConfig();
+
 module.exports = {
   auth: {
     botUsername,
@@ -27,6 +32,10 @@ module.exports = {
     levelLimit,
     levelLimitType,
     useThrottle,
-    overlayPort
+    overlayPort,
+    dataPath
+  },
+  twitch: {
+    rewardBehaviors: twitchRewards
   }
-}
+};

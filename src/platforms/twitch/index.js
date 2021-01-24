@@ -35,11 +35,12 @@ if (env.config.overlayPort) {
     client.action(env.auth.channel, 'Bot Connected!');
   });
 
-  client.on('chat', async (channel, user, message, self) => {
+  client.on('chat', async (channel, context, message, self) => {
     if (self) return;
 
     (async function command() {
-      let response = await shenanibot.command(message, user.username);
+      let response = await shenanibot.command(message,
+              context.username, context['custom-reward-id']);
       for (const message of response.split('\n')) {
         client.say(env.auth.channel, message);
       }
