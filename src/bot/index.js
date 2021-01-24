@@ -98,17 +98,12 @@ class ShenaniBot {
   randomLevel() {
     let {empty, response} = this._dequeueLevel();
     if (!empty) {
-      const markerIndex = this.queue.indexOf(null);
-      if (markerIndex !== 0) {
-        const maxIndex = ((markerIndex > -1) ? markerIndex : this.queue.length) - 1;
-        const index = Math.round(Math.random() * maxIndex);
-        let randomLevel = this.queue[index];
-        this.queue.splice(index, 1)
-        this.queue.unshift(randomLevel);
+      let index = Math.floor(Math.random() * this.queue.length);
+      let randomLevel = this.queue[index];
+      this.queue.splice(index, 1)
+      this.queue.unshift(randomLevel);
 
-        response = `Random Level... `
-      }
-      response = (response || '') + this._playLevel()
+      response = `Random Level... ${this._playLevel()}`
     }
 
     olServer.sendLevels(this.queue);
