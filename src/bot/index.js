@@ -386,7 +386,7 @@ class ShenaniBot {
     let round = 0;
     for (let i = 0; i <= maxIndex; i++) {
       const level = this.queue[i];
-      if (this.options.priority === 'rotation' && level.round > round) {
+      if (this.options.priority === 'rotation' && level && level.round > round) {
         round = level.round;
         response = `${response} **Round ${round}** :`;
       }
@@ -535,6 +535,9 @@ class ShenaniBot {
 
     this.queue.push(level);
     const pos = this.queue.length;
+    if (pos === 1 && this.options.priority === 'rotation') {
+      this.currentRound = level.round;
+    }
 
     while (laterLevels.length) {
       const laterLevel = laterLevels.shift();
