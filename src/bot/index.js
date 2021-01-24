@@ -28,6 +28,8 @@ class ShenaniBot {
           return this.nextLevel();
         case "random":
           return this.randomLevel();
+        case "mark":
+          return this.makeMarker();
       }
     }
 
@@ -92,13 +94,29 @@ class ShenaniBot {
   randomLevel() {
     let {empty, response} = this._dequeueLevel();
     if (!empty) {
-      let index = Math.round(Math.random() * (this.queue.length - 1));
-      let randomLevel = this.queue[index];
-      this.queue.splice(index, 1)
-      this.queue.unshift(randomLevel);
+      const markerIndex = this.queue.indexOf(null);
+      if (markerIndex !== 0) {
+        const maxIndex = ((markerIndex > -1) ? markerIndex : this.queue.length) - 1;
+        const index = Math.round(Math.random() * maxIndex);
+        let randomLevel = this.queue[index];
+        this.queue.splice(index, 1)
+        this.queue.unshift(randomLevel);
 
-      response = `Random Level... ${this._playLevel()}`
+        response = `Random Level... `
+      }
+      response = (response || '') + this._playLevel()
     }
+    return response;
+  }
+
+  async makeMarker() {
+    // no point making back-to-back markers
+    if (this.queue.length > 0 && !this.queue[this.queue.length - 1]) {
+      return '';
+    }
+
+    this.queue.push(null);
+    let response = "A marker has been added to the queue.";
     return response;
   }
 
@@ -186,17 +204,29 @@ class ShenaniBot {
   }
 
   showQueue() {
-    if (this.queue.length === 0) {
+    if (  this.queue.length === 0
+       || (this.queue.length === 1 && !this.queue[0]) ) {
       let response = "There aren't any levels in the queue!";
       return response;
     }
 
     let limit = Math.min(10, this.queue.length);
-    let response = `Next ${limit} levels:`;
-    for (let i = 0; i < limit; i++) {
+    let maxIndex = limit - 1;
+    let response = '';
+    for (let i = 0; i <= maxIndex; i++) {
       const level = this.queue[i];
-      response = `${response} [${level.levelName}@${level.levelId}]`;
+      if (level) {
+        response = `${response} [${level.levelName}@${level.levelId}]`;
+      } else {
+        response = `${response} [== break ==]`;
+        if (maxIndex < this.queue.length - 1) {
+          maxIndex += 1;
+        } else {
+          limit -= 1;
+        }
+      }
     }
+    response = `Next ${limit} levels:${response}`;
     return response;
   }
 
@@ -229,8 +259,10 @@ class ShenaniBot {
       };
     }
 
-    this.rce.levelhead.bookmarks.remove(this.queue[0].levelId);
-    this.levels[this.queue[0].levelId] = "was already played";
+    if (this.queue[0]) {
+      this.rce.levelhead.bookmarks.remove(this.queue[0].levelId);
+      this.levels[this.queue[0].levelId] = "was already played";
+    }
     this._removeFromQueue(0);
     
     return {
@@ -240,8 +272,11 @@ class ShenaniBot {
   }
 
   _playLevel() {
-    this.rce.levelhead.bookmarks.add(this.queue[0].levelId);
-    return `Now playing ${this.queue[0].levelName}@${this.queue[0].levelId} submitted by ${this.queue[0].submittedBy}`;
+    if (this.queue[0]) {
+      this.rce.levelhead.bookmarks.add(this.queue[0].levelId);
+      return `Now playing ${this.queue[0].levelName}@${this.queue[0].levelId} submitted by ${this.queue[0].submittedBy}`;
+    }
+    return "Not currently playing a queued level.";
   }
 
   _validateLevelId(id) {
@@ -255,12 +290,14 @@ class ShenaniBot {
   }
 
   _removeFromQueue(index) {
-    const username = this.queue[index].submittedBy;
+    if (this.queue[index]) {
+      const username = this.queue[index].submittedBy;
 
-    this.queue.splice(index, 1);
-    if (this.options.levelLimitType === "active") {
-      this._getUser(username).levelsSubmitted--;
+      if (this.options.levelLimitType === "active") {
+        this._getUser(username).levelsSubmitted--;
+      }
     }
+    this.queue.splice(index, 1);
   }
 }
 
