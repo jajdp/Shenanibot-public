@@ -1,0 +1,219 @@
+<html>
+  <head>
+    <title>ShenaniBot Overlay Setup</title>
+    <style>
+      iframe {
+        margin: .5rem 0 .5rem 2rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <p>The ShenaniBot overlay provides several built-in views for use as Browser
+    Sources.</p>
+
+    <p>Each view has a primary URL and can accept query string parameters.  A
+    view may also have additional URL "aliases" that redirect to it with preset
+    query string parameters.</p>
+
+    <p>You can use CSS overrides to customize each view's appearance.</p>
+
+    <h1>Index</h1>
+    <ul>
+      <li><a href="#full-queue">Full Queue</a>
+      <li><a href="#level-info">Level Info</a>
+      <li><a herf="#level-range">Level Range</a>
+      <li><a href="#now-playing">Now Playing</a>
+      <li><a href="#queue-status">Queue Status</a>
+      <li><a href="#random-pool">Random Pool</a>
+      <li><a href="#up-next">Up Next</a>
+    </ul>
+
+    <hr>
+
+    <a name="level-info"><h1>Level Info</h1></a>
+        <p>Show details of a level at a specified position in the queue.</p>
+
+        <iframe width="255" height="180" src="./levelInfo.html?demo=true"></iframe>
+
+        <h2>Main URL</h2>
+            <span class="baseUrl"></span>/levelInfo.html
+
+        <h2>Query Parameters:</h2>
+
+            <p><dfn>position</dfn> (number) Which level's info should be shown,
+               based on order of the queue.</p>
+            <p><dfn>skip_mark</dfn> (<code>true</code> or <code>false</code>)
+               Whether to filter out "markers" before counting levels to find
+               the one specified by <code>position</code>; see notes below.</p>
+            <p><dfn>title</dfn> (string; optional) A heading, such as "Now
+               Plaing" or "Up Next".  Note that this may need to be URL-encoded
+               (which often just means replacing spaces with %20).</p>
+
+        <h2>URL Aliases:</h2>
+
+        <ul>
+          <li><dfn><a name="now-playing"><span class="baseUrl"></span>/nowPlaying.html</a></dfn> Shows
+              the level (if any) currently being played. (<code>position</code>
+              = 1 ; <code>skip_mark</code> = <code>false</code> ;
+              <code>title</code> = <code>Now Playing</code>)
+          <li><dfn><a name="up-next"><span class="baseUrl"></span>/upNext.html</a></dfn> Shows
+              the level (if any) to be played next. (<code>position</code>
+              = 2 ; <code>skip_mark</code> = <code>false</code> ;
+              <code>title</code> = <code>Up Next</code>)
+        </ul>
+        <h2>Notes:</h2>
+
+        <p>The queue can contain levels and/or "markers".  (A marker is placed
+        by the streamer with the <code>!mark</code> command; it represents a
+        time during which no level from the queue is being played.)</p>
+
+        <p>The <code>skip_mark</code> parmaeter determines whether markers are
+        counted when applying the <code>position</code> parameter.</p>
+
+        <p>If <code>skip_mark</code> is <code>false</code>, then all queue
+        entries are counted; so a <code>position</code> of <i>N</i> means to
+        show info for the <i>Nth</i> entry no matter what.  (This is used with
+        <code>position</code> 1 by the "Now Playing" alias, for example, to
+        show the level - if any - being played.)</p>
+
+        <p>If <code>skip_mark</code> is <code>true</code>, then marker entries
+        are not counted; so a <code>position</code> of <i>N</i> means to show
+        info for the <i>Nth</i> actual level, even if one or more "breaks
+        between levels" are skipped over in the process.
+
+        <h2>CSS Classes:</h2>
+            <p><dfn>container</dfn> The block containing all of the information
+               being diaplayed.  By default this is a column-oriented flex
+               container with a black background and a ridged border.<p>
+            <p><dfn>title</dfn> The title text (e.g. Now Playing in the above
+               snapshot).</p>
+            <p><dfn>level-info</dfn> A container for the level name and id.  By
+               default this is used to keep the name/id centered between the
+               title and the "submitted by" line.</p>
+            <p><dfn>level-name</dfn> The level name text.</p>
+            <p><dfn>level-id</dfn> The level id text (the 7-digit code).</p>
+            <p><dfn>submitted-by</dfn> The 'Submitted by &lt;name&gt;' text.<p>
+    <hr>
+
+    <a name="level-range"><h1>Level Range</h1></a>
+        <p>Show a list (of some or all) of the levels in the queue.</p>
+
+        <iframe width="255" height="560" src="./levelRange.html?demo=true"></iframe>
+
+        <h2>Main URL</h2>
+            <span class="baseUrl"></span>/levelRange.html
+
+        <h2>Query Parameters:</h2>
+
+            <p><dfn>min_position</dfn> (number) The first level to include in
+               the list, based on order of the queue; default is 1.</p>
+            <p><dfn>max_position</dfn> (number) If specified, the last level to
+               include in the list, based on order of the queue; if omitted,
+               there is no limit to the number of levels listed, though they
+               might not all fit visibly on the screen.</p>
+            <p><dfn>skip_mark</dfn> (<code>true</code> or <code>false</code>)
+               Whether to filter out "markers" before counting to find
+               <code>min_position</code> and <code>max_position</code>.</p>
+            <p><dfn>end_mark</dfn> (number) If a positive integer N is
+               specified, then levels after the Nth marker (as well as the
+               marker itself) will not be included in the list (even if
+               <code>mas-position</code> has not been reached).  Markers before
+               <code>min_position</code> do not count toward this limit.
+               If 0 is specified (or if this paramter is omitted), then all
+               levels from <code>min_position</code> to
+               <code>max_position</code> are included.</p>
+
+        <h2>URL Aliases:</h2>
+
+        <ul>
+          <li><dfn><a name="full-queue"><span class="baseUrl"></span>/fullQueue.html</a></dfn> Lists all levels.  (<code>skip_mark</code> = <code>false</code> ; all other parameters omitted)
+          <li><dfn><a name="random-pool"><span class="baseUrl"></span>/randomPool.html</a></dfn> Lists the levels that could be pulled by the next <code>!random</code> command.  Note that the level at the top of the queue is not included, since it is already being played and would be dequeued by the <code>!random</code> command.  (<code>min_position</code> = 2 ; <code>skip_mark</code> = false ; <code>end_mark</code> = 1 ; all other parameters omitted)
+        </ul>
+        <h2>Notes:</h2>
+
+        <p>The queue can contain levels and/or "markers".  (A marker is placed
+        by the streamer with the <code>!mark</code> command; it represents a
+        time during which no level from the queue is being played.)</p>
+
+        <p>The <code>skip_mark</code> parmaeter determines whether markers are
+        counted when applying the <code>min_position</code> and
+        <code>max_position</code> parameters.</p>
+
+        <p>If <code>skip_mark</code> is <code>false</code>, then all queue
+        entries are counted; so a <code>min_position</code> of <i>N</i> means
+        to start the list with the <i>Nth</i> entry no matter what.  (For
+        example, if you're also using the <code>nowPlaying</code> and
+        <code>upNext</code> views, then <code>skip_mark</code> = 
+        <code>false</code> could be used along with <code>min_position</code> =
+        3 to skip over the levels whose information they already show.)
+
+        <p>If <code>skip_mark</code> is <code>true</code>, then marker entries
+        are not counted; so a <code>min_position</code> of <i>N</i> means to
+        start the list with the <i>Nth</i> actual level, even if one or more
+        "breaks between levels" are skipped over in the process.  The markers
+        do remain in the list, so they can still be used with
+        <code>end_mark</code>.</p>
+
+        <p>Whether markers are actually displayed is controlled via the CSS
+        rules.</p>
+
+        <p><code>end_mark</code> can be used to end the list just before a
+        specified marker.  For example, since the <code>!random</code> command
+        only pulls levels from between position 2 and the next marker, the
+        <code>randomPool</code> alias sets <code>end_mark</code> to 1.</p>
+
+        <h2>CSS Classes:</h2>
+            <p><dfn>container</dfn> The block containing all of the information
+               being diaplayed.  By default this is a column-oriented flex
+               container with a black background and a ridged border.<p>
+            <p><dfn>level</dfn> The information for each level in the list
+               will be inside a container with this class.</p>
+            <p><dfn>level-name</dfn> The names of listed levels</p>
+            <p><dfn>level-id</dfn> The ids of listed levels (in parens)</p>
+            <p><dfn>marker</dfn> For each marker in the list, there is a label
+               ("[ BREAK ]") identified by this class.<p>
+    <hr>
+
+    <a name="queue-status"><h1>Queue Status</h1></a>
+        <p>Show whether the queue is open or closed; and if open, indicate how
+           to add a level.</p>
+
+        <iframe width="450" height="70" src="./queueStatus.html?demo=true"></iframe>
+
+        <h2>Main URL</h2>
+            <span class="baseUrl"></span>/queueStatus.html
+
+        <h2>Query Parameters:</h2>
+            <p>None</p>
+
+        <h2>URL Aliases:</h2>
+            <p>None</p>
+
+        <h2>CSS Classes:</h2>
+            <p><dfn>container</dfn> The block containing all of the information
+               being diaplayed.  By default this is a simple block container
+               with a black background.<p>
+            <p><dfn>queue-open</dfn> This class is added to the container when
+               the status is "open"; by default this is combined with
+               <code>status-keyword</code> so that "open" appears green and
+               "closed" appears red.</p>
+            <p><dfn>status-text</dfn> The text "The queue is currently ___."
+               Note that the word in the blank ("open" or "closed") is more
+               specifically controlled by <code>status-keyword</code>.</p>
+            <p><dfn>status-keyword</dfn> The word showing the status of the
+               queue ("open" or "closed")</p>
+            <p><dfn>command-text</dfn> The text "Submit a level with ____"; by
+               default this is only shown when the queue is open.  Note that
+               the command text is more specifically controlled by
+               <code>command-keyword</code></p>
+            <p><dfn>command-keyword</dfn> The text of the "add" command</p>
+    <hr>
+
+    <script language="javascript" type="text/javascript">
+      for (const span of document.getElementsByClassName("baseUrl")) {
+        span.innerHTML = document.location.origin;
+      }
+    </script>
+  </body>
+</html>

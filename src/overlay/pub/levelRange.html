@@ -1,0 +1,119 @@
+<html>
+  <head>
+    <style type="text/css">
+      .container {
+        background-color: #000000;
+        border: 0.5em #7f7f7f ridge;
+        display: flex;
+        flex-direction: column;
+        height: 32em;
+        overflow: hidden;
+        padding: 0.5em;
+        width: 200px;
+      }
+      .level, .marker {
+        padding: .5em 0 .5em 0;
+      }
+      .level-name {
+        color: #7fff7f;
+        font-size: 1.25em;
+        line-height: 1.2em;
+      }
+      .level-id {
+        color: #4f7f4f;
+        font-size: .75em;
+        padding-left: 1em;
+      }
+      .marker {
+        color: #ff7f7f;
+        margin-left: auto;
+        margin-right: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+    </div>
+    <script language="javascript" type="text/javascript">
+      const params = new URLSearchParams(window.location.search);
+      const model = {
+        minPosition: 3,
+        skipMark: false,
+        list: []
+      };
+      const updateView = () => {
+        const container = document.getElementsByClassName("container")[0];
+        container.innerHTML = "";
+        for (const entry of model.list) {
+          const el = document.createElement('div');
+          if (entry.type === "level") {
+            el.classList.add("level");
+            const name = document.createElement('span');
+            name.classList.add("level-name");
+            name.innerHTML = entry.level.levelName;
+            el.appendChild(name);
+            const id = document.createElement('span');
+            id.classList.add("level-id");
+            id.innerHTML = entry.level.levelId;
+            el.appendChild(id);
+          } else {
+            el.classList.add("marker");
+            el.innerHTML = "[ BREAK ]";
+          }
+          container.appendChild(el);
+        };
+      };
+
+      (() => {
+        if (params.get("demo") === "true") {
+          model.list = [{
+            type: "level",
+            level: {levelName: "Castle Of Fear", levelId: "z00678g "}
+          }, {
+            type: "mark"
+          }, {
+            type: "level",
+            level: {levelName: "Squished Scrubb Struggle", levelId: "lxfp2mg "}
+          }];
+          updateView();
+        } else {
+          if (!params.has("skip_mark")) {
+            document.body.innerHTML = "Missing required query parameters; skip_mark must be specified";
+            return;
+          }
+          model.skipMark = (params.get("skip_mark") === "true");
+          model.minPosition = params.has("min_position") ? parseInt(params.get("min_position"), 10) || 1 : 1;
+
+          const ws = new WebSocket(`ws://${window.location.host}/levels`);
+          ws.onmessage = m => {
+            const queue = JSON.parse(m.data);
+            const list = [];
+            const maxPosition = params.has("max_position") ? parseInt(params.get("max_position"), 10) || 0 : 0;
+            const endMark = params.has("end_mark") ? parseInt(params.get("end_mark"), 10) || 0 : 0;
+
+            let position = 0;
+            let marks = 0;
+            for (const entry of queue) {
+              if (!model.skipMark || entry.type === "level") {
+                position += 1;
+              }
+              if (position < model.minPosition) {
+                continue;
+              }
+              if (entry.type === "mark") {
+                marks += 1;
+              }
+              if (   (maxPosition && position > maxPosition)
+                  || (endMark && marks === endMark) ) {
+                break;
+              }
+              list.push(entry);
+            }
+            model.list = list;
+            updateView();
+          };
+        }
+      })();
+    </script>
+  </body>
+</html>

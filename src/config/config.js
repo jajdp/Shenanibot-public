@@ -12,6 +12,8 @@ const levelLimit = process.env.LEVEL_LIMIT || 0;
 const levelLimitType = (process.env.LEVEL_LIMIT_TYPE || 'active').toLowerCase();
 const useThrottle = (process.env.USE_THROTTLE || 'false').toLowerCase() === 'true';
 
+const overlayPort = ((process.env.USE_OVERLAY || 'false').toLowerCase() === 'true') ? (process.env.OVERLAY_PORT || 8080) : null;
+
 module.exports = {
   auth: {
     botUsername,
@@ -24,6 +26,7 @@ module.exports = {
     prefix,
     levelLimit,
     levelLimitType,
-    useThrottle
+    useThrottle,
+    overlayPort
   }
 }
