@@ -8,9 +8,10 @@ The bot stores a list of viewer-submitted levelcodes for you to play, and automa
 **Streamer Commands**  
 `!open` : Opens the queue for viewers to submit levels  
 `!close` : Closes the queue  
-`!permit [user name]` : Allows a user to add one level to the queue even if it is closed or they have reached the submission limit
+`!permit [user name]` : Allows a user to add one level to the queue even if it is closed or they have reached the submission limit  
 `!next` : Moves the queue forward a level  
-`!random` : Chooses a random level from the queue and puts it at the front of the queue to play
+`!random` : Chooses a random level from the queue and puts it at the front of the queue to play  
+`!mark` : Place a marker in the queue.  Markers do two things:  First, they occupy a spot in the queue to allow for situations with no "now playing" level.  For example, if you don't want the first submitted level to immediately move to "now playing", you can insert a marker before opening the queue.  Second, `!random` will only consider levels up to the next marker.  (That is, if the top of the queue is a marker, it will be discarded as normal; but then a level will be chosen from those that are before the subsequent marker in the queue.)  
   
 **Viewer Commands**  
 `!add [level code]` : Adds a level to the level queue  
@@ -99,6 +100,15 @@ This option controls how the `LEVEL_LIMIT` option works.  It can be set to `sess
 If you want to limit the rate at which the bot sends twitch chat messages, you can enable this option.  This can be useful to prevent an active chat (or potentially an attacker) from causeing the bot to spam or, in extreme cases, to be disconnected by Twitch anti-spam measures.
 
 `USE_THROTTLE="true"`
+
+### Overlay
+The bot can provide a web server to display information about the queue.  The pages served in this way can be used, for example, as browser sources in OBS.  By default the server will listen on port 8080, but this is configurable.
+
+`USE_OVERLAY="true"`
+
+`OVERLAY_PORT=8888`
+
+For details on the available views and how to customize them, start up the bot and navigate a web browser to the URL it provides (http://localhost:8080 by default).
 
 ---
 ## Results

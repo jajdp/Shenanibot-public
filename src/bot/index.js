@@ -1,5 +1,6 @@
 const Rumpus = require("@bscotch/rumpus-ce");
 const ViewerLevel = require("./lib/level");
+const olServer = require("../overlay/server");
 
 class ShenaniBot {
   constructor(botOptions) {
@@ -9,6 +10,7 @@ class ShenaniBot {
     this.queue = [];
     this.queueOpen = true;
     this.users = {};
+    this.levels = {};
   }
 
   async command(command, username) {
@@ -27,6 +29,8 @@ class ShenaniBot {
           return this.nextLevel();
         case "random":
           return this.randomLevel();
+        case "mark":
+          return this.makeMarker();
       }
     }
 
@@ -51,6 +55,7 @@ class ShenaniBot {
     let response = "The queue has been opened, add some levels to it!";
 
     this.queueOpen = true;
+    olServer.sendStatus(true);
     return response;
   }
 
@@ -58,6 +63,7 @@ class ShenaniBot {
     let response = "The queue has been closed! No more levels :(";
 
     this.queueOpen = false;
+    olServer.sendStatus(false);
     return response;
   }
 
@@ -85,6 +91,7 @@ class ShenaniBot {
       response = this._playLevel();
     }
 
+    olServer.sendLevels(this.queue);
     return response;
   }
 
@@ -98,6 +105,20 @@ class ShenaniBot {
 
       response = `Random Level... ${this._playLevel()}`
     }
+
+    olServer.sendLevels(this.queue);
+    return response;
+  }
+
+  async makeMarker() {
+    // no point making back-to-back markers
+    if (this.queue.length > 0 && !this.queue[this.queue.length - 1]) {
+      return '';
+    }
+
+    this.queue.push(null);
+    olServer.sendLevels(this.queue);
+    let response = "A marker has been added to the queue.";
     return response;
   }
 
@@ -119,13 +140,10 @@ class ShenaniBot {
       return response;
     }
 
-    for (let i = 0; i < this.queue.length; i++) {
-      const level = this.queue[i];
-
-      if (level.levelId === levelId) {
-        response = "That level is already in the queue!";
-        return response;
-      }
+    const reason = this.levels[levelId];
+    if (reason) {
+      response = `That level ${reason}!`;
+      return response;
     }
 
     let levelInfo = await this.rce.levelhead.levels.search({ levelIds: levelId, includeAliases: true }, { doNotUseKey: true });
@@ -137,15 +155,19 @@ class ShenaniBot {
         username
       );
       this.queue.push(level);
-      if (this.queue.length === 1) {
-        this._playLevel();
-      }
+      olServer.sendLevels(this.queue);
 
       user.levelsSubmitted++;
       user.permit = (username === this.streamer);
 
       response = `${level.levelName}@${level.levelId} was added! Your level is #${this.queue.length} in queue.`;
       response = this.options.levelLimit > 0 ? `${response} Submission ${user.levelsSubmitted}/${this.options.levelLimit}` : response;
+
+      if (this.queue.length === 1) {
+        response = `${response}\n${this._playLevel()}`;
+      }
+
+      this.levels[levelInfo[0].levelId] = "is already in the queue";
       return response;
     } catch (error) {
       console.error(error);
@@ -164,14 +186,16 @@ class ShenaniBot {
       const level = this.queue[i];
 
       if (level.levelId === levelId) {
-        if (level.submittedBy === username) {
+        if (level.submittedBy === username || this.streamer === username) {
           if (i === 0) {
             response = "You can't remove the current level from the queue!";
             return response;
           }
           
           this._removeFromQueue(i);
+          olServer.sendLevels(this.queue);
           response = `${level.levelName}@${level.levelId} was removed from the queue!`;
+          this.levels[levelId] = (username === this.streamer) ? `was removed by ${username}; it can't be re-added` : null;
           return response;
         } else {
           response = "You can't remove a level from the queue that you didn't submit!";
@@ -184,17 +208,29 @@ class ShenaniBot {
   }
 
   showQueue() {
-    if (this.queue.length === 0) {
+    if (  this.queue.length === 0
+       || (this.queue.length === 1 && !this.queue[0]) ) {
       let response = "There aren't any levels in the queue!";
       return response;
     }
 
     let limit = Math.min(10, this.queue.length);
-    let response = `Next ${limit} levels:`;
-    for (let i = 0; i < limit; i++) {
+    let maxIndex = limit - 1;
+    let response = '';
+    for (let i = 0; i <= maxIndex; i++) {
       const level = this.queue[i];
-      response = `${response} [${level.levelName}@${level.levelId}]`;
+      if (level) {
+        response = `${response} [${level.levelName}@${level.levelId}]`;
+      } else {
+        response = `${response} [== break ==]`;
+        if (maxIndex < this.queue.length - 1) {
+          maxIndex += 1;
+        } else {
+          limit -= 1;
+        }
+      }
     }
+    response = `Next ${limit} levels:${response}`;
     return response;
   }
 
@@ -227,7 +263,10 @@ class ShenaniBot {
       };
     }
 
-    this.rce.levelhead.bookmarks.remove(this.queue[0].levelId);
+    if (this.queue[0]) {
+      this.rce.levelhead.bookmarks.remove(this.queue[0].levelId);
+      this.levels[this.queue[0].levelId] = "was already played";
+    }
     this._removeFromQueue(0);
     
     return {
@@ -237,8 +276,11 @@ class ShenaniBot {
   }
 
   _playLevel() {
-    this.rce.levelhead.bookmarks.add(this.queue[0].levelId);
-    return `Now playing ${this.queue[0].levelName}@${this.queue[0].levelId} submitted by ${this.queue[0].submittedBy}`;
+    if (this.queue[0]) {
+      this.rce.levelhead.bookmarks.add(this.queue[0].levelId);
+      return `Now playing ${this.queue[0].levelName}@${this.queue[0].levelId} submitted by ${this.queue[0].submittedBy}`;
+    }
+    return "Not currently playing a queued level.";
   }
 
   _validateLevelId(id) {
@@ -252,12 +294,14 @@ class ShenaniBot {
   }
 
   _removeFromQueue(index) {
-    const username = this.queue[index].submittedBy;
+    if (this.queue[index]) {
+      const username = this.queue[index].submittedBy;
 
-    this.queue.splice(index, 1);
-    if (this.options.levelLimitType === "active") {
-      this._getUser(username).levelsSubmitted--;
+      if (this.options.levelLimitType === "active") {
+        this._getUser(username).levelsSubmitted--;
+      }
     }
+    this.queue.splice(index, 1);
   }
 }
 
