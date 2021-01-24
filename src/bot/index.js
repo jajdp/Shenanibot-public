@@ -12,6 +12,9 @@ class ShenaniBot {
     this.queueOpen = true;
     this.users = {};
     this.levels = {};
+    if (this.options.priority === 'rotation') {
+      this.currentRound = 1;
+    }
     this.twitch = {
       rewards: {
         urgent: "move a level to the front of the queue",
@@ -137,6 +140,10 @@ class ShenaniBot {
         const noPriorityIndex = this.queue.findIndex(l => !l || !l.priority);
         if (noPriorityIndex > 0) {
           groupLength = noPriorityIndex;
+        }
+
+        if (this.queue[groupLength - 1].round > this.currentRound) {
+          groupLength = this.queue.findIndex(l => l.round > this.currentRound);
         }
 
         const index = Math.floor(Math.random() * groupLength);
@@ -316,24 +323,25 @@ class ShenaniBot {
     }
 
     let level = new ViewerLevel(
-      levelInfo[0].levelId,
+      levelId,
       levelInfo[0].title,
       username
     );
-    this.queue.push(level);
+
+    const pos = this._enqueueLevel(level, user);
     olServer.sendLevels(this.queue);
 
     user.levelsSubmitted++;
     user.permit = (username === this.streamer);
 
-    response = `${level.levelName}@${level.levelId} was added! Your level is #${this.queue.length} in the queue.`;
+    response = `${level.levelName}@${level.levelId} was added! Your level is #${pos} in the queue.`;
     response = this.options.levelLimit > 0 ? `${response} Submission ${user.levelsSubmitted}/${this.options.levelLimit}` : response;
 
     if (this.queue.length === 1) {
       response = `${response}\n${this._playLevel()}`;
     }
 
-    this.levels[levelInfo[0].levelId] = "is already in the queue";
+    this.levels[levelId] = "is already in the queue";
     return response;
   }
 
@@ -375,8 +383,13 @@ class ShenaniBot {
     let limit = Math.min(10, this.queue.length);
     let maxIndex = limit - 1;
     let response = '';
+    let round = 0;
     for (let i = 0; i <= maxIndex; i++) {
       const level = this.queue[i];
+      if (this.options.priority === 'rotation' && level.round > round) {
+        round = level.round;
+        response = `${response} **Round ${round}** :`;
+      }
       if (level) {
         response = `${response} [${level.levelName}@${level.levelId}]`;
       } else {
@@ -434,6 +447,10 @@ class ShenaniBot {
     if (newIndex === -1) {
       newIndex = this.queue.length;
     }
+    if (this.options.priority === 'rotation') {
+      const prevLevel = this.queue[nexIndex - 1];
+      level.round = prevLevel ? prevLevel.round : this.currentRound;
+    }
     this.queue.splice(newIndex, 0, level);
     return `${level.levelName}@${level.levelId} was marked as priority! It is now #${newIndex + 1} in the queue.`;
   }
@@ -446,7 +463,7 @@ class ShenaniBot {
     level.priority = true;
     let i;
     for (i = index - 1; i > 0; i--) {
-      if (!this.queue[i] || this.queue[i].priority) {
+      if (!this.queue[i] || this.queue[i].priority || this.queue[i].round < level.round) {
         break;
       }
     }
@@ -459,14 +476,16 @@ class ShenaniBot {
     let { level, index, response } = this._getQueuedLevelForReward(levelId);
     if (!level) {
       return response;
-    } 
+    }
 
     if (index === 1) {
-      response = "You can't expedite a level that's already next to be played."
+      response = "You can't expedite a level that's already next to be played.";
     } else if (!this.queue[index - 1]) {
-      response = "You can't expedite a level that's right after a break in the queue."
+      response = "You can't expedite a level that's right after a break in the queue.";
+    } else if (this.queue[index - 1].round < level.round) {
+      repsonse = "You can't expedite a level that's already the first to be played in its round.";
     } else if (this.queue[index - 1].priority && !level.priority) {
-      response = "You can't expedite a normal-priority level that's right after a high-priority level."
+      response = "You can't expedite a normal-priority level that's right after a high-priority level.";
     } else {
       response = `${level.levelName}@${level.levelId} was expedited! It is now #${index} in the queue.`;
       index -= 1;
@@ -503,6 +522,33 @@ class ShenaniBot {
     return this.users[username];
   }
 
+  _enqueueLevel(level, user) {
+    let laterLevels = [];
+    if (this.options.priority === 'rotation') {
+      level.round = Math.max((user.lastRound || 0) + 1, this.currentRound);
+      user.lastRound = level.round;
+      const n = this.queue.findIndex(l => l && l.round > level.round);
+      if (n > -1) {
+        laterLevels = this.queue.splice(n);
+      }
+    }
+
+    this.queue.push(level);
+    const pos = this.queue.length;
+
+    while (laterLevels.length) {
+      const laterLevel = laterLevels.shift();
+      if (laterLevels[0] === null) {
+        this.queue.push(null);
+      }
+      if (laterLevel) {
+        this.queue.push(laterLevel);
+      }
+    }
+
+    return pos;
+  }
+
   _dequeueLevel() {
     if (this.queue.length === 0) {
       return {
@@ -516,6 +562,10 @@ class ShenaniBot {
       this.levels[this.queue[0].levelId] = "was already played";
     }
     this._removeFromQueue(0);
+
+    if (this.options.priority === 'rotation' && this.queue[0]) {
+      this.currentRound = this.queue[0].round;
+    }
 
     return {
       empty: !this.queue.length,
@@ -543,10 +593,28 @@ class ShenaniBot {
 
   _removeFromQueue(index) {
     if (this.queue[index]) {
-      const username = this.queue[index].submittedBy;
+      const level = this.queue[index];
+      const username = level.submittedBy;
+      const user = this._getUser(username);
 
       if (this.options.levelLimitType === "active") {
-        this._getUser(username).levelsSubmitted--;
+        user.levelsSubmitted--;
+      }
+
+      if (this.options.priority === 'rotation' && index) {
+        let destRound = level.round;
+        user.lastRound = 0;
+        for (let i = index + 1; i < this.queue.length; i++) {
+          const laterLevel = this.queue[i];
+          if (laterLevel && laterLevel.submittedBy === username) {
+            this.queue[index] = laterLevel;
+            index = i;
+            const nextDestRound = laterLevel.round;
+            laterLevel.round = destRound;
+            user.lastRound = destRound;
+            destRound = nextDestRound;
+          }
+        }
       }
     }
     this.queue.splice(index, 1);
