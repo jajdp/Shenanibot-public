@@ -1,6 +1,7 @@
 const ShenaniBot = require('../bot/index');
-const botOptions = require('../config/config');
+const configLoader = require('../config/loader');
 
+const botOptions = configLoader.load();
 const bot = new ShenaniBot(botOptions);
 
 (async function test() {
