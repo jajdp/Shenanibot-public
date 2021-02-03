@@ -223,8 +223,9 @@ const questions = {
           return true;
         },
         message: 'Level Submission Limit:',
+        default: a => a.config.config.levelLimit || 1,
         // type: 'number' acts up when validation fails, so use this instead
-        filter: i => i.match(/^\s*[1-9]\d*\s*$/) ? parseInt(i) : i,
+        filter: i => typeof i === 'string' && i.match(/^\s*[1-9]\d*\s*$/) ? parseInt(i) : i,
         validate: i => (typeof i !== 'number') ? 'Please enter a number of levels' : true
       }
     )
@@ -290,7 +291,7 @@ const questions = {
         default: a => fp.get('config.config.overlayPort', a) || 8080,
         // type: 'number' acts up when validation fails, so use this instead
         filter: i => {
-          if (i.match(/^\s*[1-9]\d*\s*$/)) {
+          if (typeof i === 'string' && i.match(/^\s*[1-9]\d*\s*$/)) {
             const n = parseInt(i);
             if (n < 65536) {
               return n;
