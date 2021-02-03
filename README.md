@@ -10,13 +10,13 @@ The bot stores a list of viewer-submitted levelcodes for you to play, and automa
 `!close` : Closes the queue  
 `!permit [user name]` : Allows a user to add one level to the queue even if it is closed or they have reached the submission limit  
 `!next` : Moves the queue forward a level  
-`!random` : Chooses a random level from the queue and puts it at the front of the queue to play.  If there are markers in the queue, a level will be chosen from before the first marker.  If priority rules other than order have been applied to the queue, this command respects them; so the chosen level will always be one of thoes with the highest priority
-`!mark` : Place a marker in the queue.  See [Using Markers](#using-markers) for details.
- `!reward [reward behavior]` : Sets up a channel points reward.  Unlike other commands, this must be sent as the message for a custom channel points reward; it assigns a behavior to that particular custom reward.  See [Channel Points Integration](#channel-points-integration) for details.
- `!noreward [reward behavior]` : Removes the assignment of a reward behavior from whatever custom reward currently has that behavior
+`!random` : Chooses a random level from the queue and puts it at the front of the queue to play.  If there are markers in the queue, a level will be chosen from before the first marker.  If priority rules other than order have been applied to the queue, this command respects them; so the chosen level will always be one of thoes with the highest priority  
+`!mark` : Place a marker in the queue.  See [Using Markers](#using-markers) for details  
+`!reward [reward behavior]` : Sets up a channel points reward.  Unlike other commands, this must be sent as the message for a custom channel points reward; it assigns a behavior to that particular custom reward.  See [Channel Points Integration](#channel-points-integration) for details  
+`!noreward [reward behavior]` : Removes the assignment of a reward behavior from whatever custom reward currently has that behavior  
   
 **Viewer Commands**  
-`!check [level code]` : Checks if the streamer has played a level; note that very recent plays may not be reported
+`!check [level code]` : Checks if the streamer has played a level; note that very recent plays may not be reported  
 `!add [level code]` : Adds a level to the level queue  
 `!remove [level code]` : Removes a level from the queue, you can only remove your own levels  
 `!queue` : Shows up to 10 of the next levels in the queue  
@@ -34,136 +34,77 @@ You can join the [Butterscotch Shenanigans Discord](https://discord.gg/w55QE5Y) 
 ## Getting Started
 **Materials:**  
 + Node.js
++ LevelHead account
 + Streamer Twitch account
 + Bot Twitch account
 
 If you don't know how to program, don't worry. This quick guide will teach everything you need to know to get the bot up and running!
 
 **Node.js**  
-In order to run the chatbot, you will need to download Node.js, which you can download at https://nodejs.org. Click on the button that says *'Recommended for most users'*. Once it has downloaded, open the file, and a window will pop up to help guide you through the installation. The default settings should work fine.
+In order to run the chatbot, you will need Node.js, which you can download at https://nodejs.org. Click on the button that says *'Recommended for most users'*. Once it has downloaded, open the file, and a window will pop up to help guide you through the installation. The default settings should work fine.
 
+## Installing the Bot
 Next, you will have to download the code for the bot. Click on the green button at the top of this screen that says **Code**, then click on **Download ZIP**
 
-Now you need to locate the file `.env` (It's in the root of the project, like where the `package.json` is). Once you have it, open it with your text editor of choice, then you will need to fill those fields with the following information:
+For new installations, pick a directory for the bot; this will be referred to as the "bot directory" throughout these instructions. Unpack the contents of the ZIP file into the bot directory. 
 
+If you're upgrading from a previous version, you can either user your existing bot diretory, or copy your configuration files to a new bot directory.
 
-# Parameters
-## Authentication
+- To use your existing directory, you should remove the contents of the `src` folder.  (You might want to rename the old folder to `src-old` to keep as a backup until you have the new version working.)
 
-### Delegation Key
-You will need a delegation key from your own [Levelhead account](https://www.bscotch.net/account) with the following permissions:  
-+ View own and others' Levelhead data (levels, profiles, aliases, etc).  
-+ View, add, and delete own Levelhead level bookmarks.  
-After you have generated it, copy it, and paste it in the `DELEGATION_TOKEN` parameter of the `.env` file. eg.  
-
-`DELEGATION_TOKEN="blahblahblahblah"`
-
-### Twitch Streamer Channel Name
-On your own channel https://www.twitch.tv/channelName, get the last part that says "channelName" and paste it into the `CHANNEL` parameter eg.  
-
-`CHANNEL="someLevelheadStreamer"`
-
-### Twitch Streamer Channel Username
-On your own channel, write something in the chat and copy your Twitch username displayed like this:
-
-`TwitchDisplayUserName: hey what's up?`
-
-`TwitchDisplayUserName` would be your display username, then paste it into the `STREAMER` parameter eg.  
-
-`STREAMER="someTwitchUsername"`
-
-### Twitch Bot Username and OAuth Token
-This is the part where you need a second Twitch account, make sure that you don't do it on your streaming account!
-
-You can get the OAuth token by going to https://twitchapps.com/tmi/, and accepting the permissions **on the bot account!**  
-Copy the token that it gives you, and **do not share it with anybody!**
-Once you have the information, just paste them into the `BOT_USERNAME` and `OAUTH_TOKEN` parameters eg.
-
-`BOT_USERNAME="LevelheadBot"`
-`OAUTH_TOKEN="123123123123131231231"`
-
-## Configuration
-
-### Prefix
-This parameter lets you customize what the symbol that denotes a command. For example in `!add`, the `!` is the prefix to your command. Just choose what you want the prefix to be, and fill out the parameter `PREFIX` eg.
-
-`PREFIX="$"`
-
-### Level Submission Limit
-This parameter controls how many levels a single person can submit. Set it to 0 to disable the limit. You can set it to any number you would like, in the `LEVEL_LIMIT` parameter eg.
-
-`LEVEL_LIMIT=5`
-
-### Level Submission Limit Type
-This option controls how the `LEVEL_LIMIT` option works.  It can be set to `session` which means each user can only submit -**x**- levels until the bot is reset, or `active` which means each user can only have -**x**- levels in the queue at one time
-
-`LEVEL_LIMIT_TYPE="active"`
-
-### Priority Mode
-This option allows you to change the default order in which levels will be played.  (This order may still be affected by any configured channel point rewards.)
-
-The default `PRIORITY` mode is "fifo", meaning "first in first out" - level order is determined by order of submission.  This mode does not prioritize levels for purposes of the !random command; it can pick levels in any order (subject to the rules for markers and channel point rewards).
-
-If `PRIORITY` is set to "rotation", then levels are divided into "rounds".  A player can only add one level per round; additional submissions are automatically moved to future rounds.  All levels from one round will be played before moving on to the next round.  (!next will follow a rotation, while !random will choose any level from the current round, subject to rules for markers and channel point rewards.)  Note that configured channel point rewards could be used to add a level to the current round even though the player already has a level in the current round.
-
-`PRIORITY="fifo"
-
-### Twitch Message Throttling
-If you want to limit the rate at which the bot sends twitch chat messages, you can enable this option.  This can be useful to prevent an active chat (or potentially an attacker) from causeing the bot to spam or, in extreme cases, to be disconnected by Twitch anti-spam measures.
-
-`USE_THROTTLE="true"`
-
-### Overlay
-The bot can provide a web server to display information about the queue.  The pages served in this way can be used, for example, as browser sources in OBS.  By default the server will listen on port 8080, but this is configurable.
-
-`USE_OVERLAY="true"`
-
-`OVERLAY_PORT=8888`
-
-For details on the available views and how to customize them, start up the bot and navigate a web browser to the URL it provides (http://localhost:8080 by default).
-
-### Data Path
-If you are running the bot locally, then you can specify a directory where data can be written.  The default of `.` will place the files in the directory where you've installed the bot (assuming you launch it from that directory).
-
-If you are using a remote hosting service to run the bot, then you will most likely need to leave this setting undefined.  (If the service you use offers persistent storage, you would need to consult their docs for a path to use to access that storage.)  When this is undefined, features that would require local storage may not be available or may not work as well.  The documentation for such features will spell out the limitations.
-
-`DATA_PATH=.`
-
-### Channel Point Reward Settings
-If `DATA_PATH` is not set, then the `!reward` command will respond with information for you to add to the `.env` file.  (If `DATA_PATH` is set, then the `!reward` command will automatically write the required information to a file in that location and the corresponding `.env` settings will be ignored.  This means that if you set `DATA_PATH` after configuring rewards in `.env`, they will have to be reconfigured after setting `DATA_PATH`; but it avoids potentially frustrating problems with old settings being restored when restarting ShenaniBot.)
-
----
-## Results
-The final file should now look something like this: (**Note:** It does **not** matter what order the parameters are in)
-
-```
-BOT_USERNAME="yourBotUsername"
-OAUTH_TOKEN="oauth:exampleoauthtoken"
-CHANNEL="yourTwitchChannel"
-STREAMER="yourUsername"
-DELEGATION_TOKEN="exampledelegationkey"
-PREFIX="!"
-LEVEL_LIMIT_TYPE="active"
-LEVEL_LIMIT=0
-```
+- To use a new directory, you'll want to copy the `.env` file, and the `twitchpoints.json` file if there is one. These files will be used to initialize the new version's configuration.
 
 ## Installing Project Dependencies
-Next, you'll need to open your computer's terminal, and navigate to the project directory (Example: `C:\My_User\Documents\Shenanibot-public`). Just look up how to do it, or you can ask on the Discord how to do it.  
-You can open the terminal on Windows by pressing "Window Key + R", then typing in `cmd`  
+Next, you'll need to open your computer's terminal, and navigate to the bot directory. (You can open the terminal on Windows by pressing "Window Key + R", then typing in `cmd`; or you can run PowerShell as your terminal.)
+
 Once you are in the directory/folder, you can install the project dependencies by typing:  
 
 `npm install`
 
-If you are curious about what you are installing, here's a list of the project dependencies:
-+ RumpusCE Node Package, https://github.com/bscotch/rumpus-ce
-+ TMI.js, https://github.com/tmijs/tmi.js
-+ DotEnv, https://www.npmjs.com/package/dotenv
-+ Axios, https://www.npmjs.com/package/axios
+This will install several packages the bot uses (such as client libraries for Twitch chat and the Rumpus API), as well as any packages required by those packages.
+
+## Configuration
+For most configuration options, you can run the configuration utility by typing:
+
+`npm run conigure`
+
+For new installatios, you will need to provide some information that's needed for the bot to interact with Twitch and with LevelHead. (If you are upgrading from a previous version of ShenaniBot, your configuration should be imported automatically.)
+
+You can also use the configuration utility to change configuration parameters at any time (although a bot restart is required for changes to take effect).
+
+The configuration utility presents a menu with the following options:
+
+### Twitch Streamer Info (required)
+Here you set yoru Twitch channel name and username. Normally these will be the same (or will differ only by capitalization, which makes no difference to the bot). The bot connects to the chat for the specified channel and grants streamer access (such as the ability to execute streamer commands) for messages that match the username.
+
+### Twitch Bot Authentication (required)
+The bot needs an account to use when logging into Twitch chat. This account can be shared with other bots, but it should not be your streamer account.
+
+Rather than a password, bots use an OAuth token to log in; so you need to provide a username and OAuth token for the bot account. Once you've created the bot account, you can generate an OAuth token for it at https://twitchapps.com/tmi
+
+### Rumpus Authentication (required)
+The Rumpus API allows the bot to communicate with LevelHead. (Most importantly, this is how bookmarks are updated.) The API uses a "delegation key" to provide access to various game functions. You can manage your delegation tokens at https://www.bscotch.net/account
+
+The bot needs a token with the following permissions:
+- View own and others' Levelhead data
+- View, and, and delete own Levelhead level bookmarks
+
+### Queue Management Options
+Here you can decide whether levels are taken into the queue in the order received, or whether viewers "take turns" in a rotation. You can also configure limits on how many levels each viewer may submit.
+
+### Chat Options
+Options that control the bot's interaction with chat are found here. You can change the prefix used to recognize bot cmmands. (By default this is !, and it is recommended to use this if possible.) You can also enable or disable message throttling.
+
+### Overlay Options
+You can enable or diable the overlay server, which allows you to include information about the queue in your stream layout (provided your streaming software can be set up to display a web view, such as with OBS Browser Sources).
+
+Once you've configured this feature, the bot will provide a URL with setup instructions at start-up. (Most of the overlay setup is done in your streaming software.)
+
 
 # Running the Bot
-Each time you run the bot, you'll have to naviagate in the terminal to the root of the project (Example: `C:\My_User\Documents\Shenanibot-public`, or where the `package.json` is located) and type:  
+Each time you run the bot, you'll have to naviagate in the terminal to the bot directory and type:
 
-`node .`
+`npm run start`
 
 Then the terminal window will show the connection process to your Twitch channel and greets you with `"Bot Online!"`
 
