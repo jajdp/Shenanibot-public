@@ -153,7 +153,7 @@ class ShenaniBot {
     let index;
 
     let match;
-    if (match = args.match(/^(next\s|last\s)?from\s([a-zA-Z0-9][a-zA-z0-9_]{3,24})\s*$/)) {
+    if (match = args.match(/^(next\s|last\s)?from\s@?([a-zA-Z0-9][a-zA-z0-9_]{3,24})\s*$/)) {
       const last = match[1] === 'last ';
       const start = last ? this.queue.length - 1 : 1;
       const stop = i => last ? i > 0 : i < this.queue.length;
