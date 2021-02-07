@@ -11,6 +11,7 @@ The bot stores a list of viewer-submitted levelcodes for you to play, and automa
 `!permit [user name]` : Allows a user to add one level to the queue even if it is closed or they have reached the submission limit  
 `!next` : Moves the queue forward a level  
 `!random` : Chooses a random level from the queue and puts it at the front of the queue to play.  If there are markers in the queue, a level will be chosen from before the first marker.  If priority rules other than order have been applied to the queue, this command respects them; so the chosen level will always be one of thoes with the highest priority  
+`!play` : Move the queue forward, pulling a specified level (by username or queue position) to the front to be played next. You can say, for example, `!play from username` to play the next level submitted by `username`; or `!play last from username` to play the level most recently submitted by `username`; or `!play 5` to play whatever level is at position #5 in the queue. Note that this will override any other priority rule, so it should be used with caution if, for example, channel points have been spent on priority  
 `!mark` : Place a marker in the queue.  See [Using Markers](#using-markers) for details  
 `!reward [reward behavior]` : Sets up a channel points reward.  Unlike other commands, this must be sent as the message for a custom channel points reward; it assigns a behavior to that particular custom reward.  See [Channel Points Integration](#channel-points-integration) for details  
 `!noreward [reward behavior]` : Removes the assignment of a reward behavior from whatever custom reward currently has that behavior  
@@ -46,7 +47,7 @@ In order to run the chatbot, you will need Node.js, which you can download at ht
 ## Installing the Bot
 Next, you will have to download the code for the bot. Click on the green button at the top of this screen that says **Code**, then click on **Download ZIP**
 
-For new installations, pick a directory for the bot; this will be referred to as the "bot directory" throughout these instructions. Unpack the contents of the ZIP file into the bot directory. 
+For new installations, pick a directory for the bot (e.g. "c:\my_user\Documents\Shenanibot-public); this will be referred to as the "bot directory" throughout these instructions. Unpack the contents of the ZIP file into the bot directory. 
 
 If you're upgrading from a previous version, you can either user your existing bot diretory, or copy your configuration files to a new bot directory.
 
