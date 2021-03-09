@@ -1,7 +1,7 @@
-const express = require('express');
-const http = require('http');
-const WebSocket = require('ws');
-const path = require('path');
+const express = require("express");
+const http = require("http");
+const WebSocket = require("ws");
+const path = require("path");
 
 let wsServer = null;
 const clients = {
@@ -9,14 +9,14 @@ const clients = {
     levels: []
 };
 const state = {
-    prefix: '',
-    levels: '[]',
-    status: ''
+    prefix: "",
+    levels: "[]",
+    status: ""
 };
 
 const setStatus = (open) => {
     state.status = (JSON.stringify({
-        status: open ? 'open' : 'closed',
+        status: open ? "open" : "closed",
         command: `${state.prefix}add`
     }));
 };
@@ -32,26 +32,26 @@ module.exports = {
     setStatus(true);
 
     const app = express();
-    app.use(express.static(path.join(__dirname, 'pub')));
+    app.use(express.static(path.join(__dirname, "pub")));
 
     const httpServer = http.createServer(app);
     wsServer = new WebSocket.Server({
       server: httpServer
     });
-    wsServer.on('connection', (ws,req) => {
+    wsServer.on("connection", (ws,req) => {
       console.log(`received ws request for ${req.url}`);
-      if (req.url === '/levels') {
+      if (req.url === "/levels") {
         clients.levels.push(ws);
-        ws.on('close', () => {
-          console.log('ws connection for /levels closed');
+        ws.on("close", () => {
+          console.log("ws connection for /levels closed");
           clients.levels.splice(clients.levels.indexOf(ws), 1);
         });
         ws.send(state.levels);
       }
-      if (req.url === '/status') {
+      if (req.url === "/status") {
         clients.status.push(ws);
-        ws.on('close', () => {
-          console.log('ws connection for /status closed');
+        ws.on("close", () => {
+          console.log("ws connection for /status closed");
           clients.status.splice(clients.status.indexOf(ws), 1);
         });
         ws.send(state.status);
@@ -72,8 +72,8 @@ module.exports = {
 
   sendLevels: queue => {
     state.levels = JSON.stringify(queue.map(e => ({
-        type: e ? 'level' : 'mark',
-        level: e || undefined
+        type: e ? e.type : "mark",
+        entry: e || undefined
     })));
     for (const ws of clients.levels) {
         ws.send(state.levels);

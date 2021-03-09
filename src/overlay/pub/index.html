@@ -64,9 +64,10 @@
         </ul>
         <h2>Notes:</h2>
 
-        <p>The queue can contain levels and/or "markers".  (A marker is placed
-        by the streamer with the <code>!mark</code> command; it represents a
-        time during which no level from the queue is being played.)</p>
+        <p>The queue can contain levels, creator codes, and/or "markers".  (A
+        marker is placed by the streamer with the <code>!mark</code> command;
+        it represents a time during which no level from the queue is being
+        played.)</p>
 
         <p>The <code>skip_mark</code> parmaeter determines whether markers are
         counted when applying the <code>position</code> parameter.</p>
@@ -86,14 +87,20 @@
             <p><dfn>container</dfn> The block containing all of the information
                being diaplayed.  By default this is a column-oriented flex
                container with a black background and a ridged border.<p>
-            <p><dfn>title</dfn> The title text (e.g. Now Playing in the above
-               snapshot).</p>
+            <p><dfn>creator</dfn> If the entry being shown is a creator code,
+               the container element will have this class.</p>
+            <p><dfn>item-id</dfn> The level or creator id text.</p>
+            <p><dfn>item-name</dfn> The level or creator name text.</p>
+            <p><dfn>level</dfn> If the entry being shown is a level, the
+               container element will have this class.</p>
             <p><dfn>level-info</dfn> A container for the level name and id.  By
                default this is used to keep the name/id centered between the
                title and the "submitted by" line.</p>
-            <p><dfn>level-name</dfn> The level name text.</p>
-            <p><dfn>level-id</dfn> The level id text (the 7-digit code).</p>
+            <p><dfn>marker</dfn> If the entry being shown is a marker, the
+               container element will have this class.</p>
             <p><dfn>submitted-by</dfn> The 'Submitted by &lt;name&gt;' text.<p>
+            <p><dfn>title</dfn> The title text (e.g. Now Playing in the above
+               snapshot).</p>
     <hr>
 
     <a name="level-range"><h1>Level Range</h1></a>
@@ -132,9 +139,10 @@
         </ul>
         <h2>Notes:</h2>
 
-        <p>The queue can contain levels and/or "markers".  (A marker is placed
-        by the streamer with the <code>!mark</code> command; it represents a
-        time during which no level from the queue is being played.)</p>
+        <p>The queue can contain entries for levels, creators, and/or
+        "markers".  (A marker is placed by the streamer with the
+        <code>!mark</code> command; it represents a time during which no level
+        from the queue is being played.)</p>
 
         <p>The <code>skip_mark</code> parmaeter determines whether markers are
         counted when applying the <code>min_position</code> and
@@ -167,10 +175,12 @@
             <p><dfn>container</dfn> The block containing all of the information
                being diaplayed.  By default this is a column-oriented flex
                container with a black background and a ridged border.<p>
+            <p><dfn>creator</dfn> The information for each creator code in the
+               list will be inside a container with this class.</p>
+            <p><dfn>item-id</dfn> The ids of listed levels or creators</p>
+            <p><dfn>item-name</dfn> The names of listed levels or creators</p>
             <p><dfn>level</dfn> The information for each level in the list
                will be inside a container with this class.</p>
-            <p><dfn>level-name</dfn> The names of listed levels</p>
-            <p><dfn>level-id</dfn> The ids of listed levels (in parens)</p>
             <p><dfn>marker</dfn> For each marker in the list, there is a label
                ("[ BREAK ]") identified by this class.<p>
     <hr>

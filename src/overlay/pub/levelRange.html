@@ -11,15 +11,15 @@
         padding: 0.5em;
         width: 200px;
       }
-      .level, .marker {
+      .level, .creator, .marker {
         padding: .5em 0 .5em 0;
       }
-      .level-name {
+      .item-name {
         color: #7fff7f;
         font-size: 1.25em;
         line-height: 1.2em;
       }
-      .level-id {
+      .item-id {
         color: #4f7f4f;
         font-size: .75em;
         padding-left: 1em;
@@ -41,24 +41,34 @@
         skipMark: false,
         list: []
       };
+      const buildEntry = (el, name, id) => {
+        const nameEl = document.createElement('span');
+        nameEl.classList.add("item-name");
+        nameEl.innerHTML = name;
+        el.appendChild(nameEl);
+        const idEl = document.createElement('span');
+        idEl.classList.add("item-id");
+        idEl.innerHTML = id;
+        el.appendChild(idEl);
+      };
       const updateView = () => {
         const container = document.getElementsByClassName("container")[0];
         container.innerHTML = "";
-        for (const entry of model.list) {
+        for (const item of model.list) {
           const el = document.createElement('div');
-          if (entry.type === "level") {
-            el.classList.add("level");
-            const name = document.createElement('span');
-            name.classList.add("level-name");
-            name.innerHTML = entry.level.levelName;
-            el.appendChild(name);
-            const id = document.createElement('span');
-            id.classList.add("level-id");
-            id.innerHTML = entry.level.levelId;
-            el.appendChild(id);
-          } else {
-            el.classList.add("marker");
-            el.innerHTML = "[ BREAK ]";
+          switch (item.type) {
+            case "level":
+              buildEntry(el, item.entry.name, item.entry.id);
+              el.classList.add("level");
+              break;
+            case "creator":
+              buildEntry(el, `Level from ${item.entry.name}`,
+                         `@${item.entry.id}`);
+              el.classList.add("creator");
+              break;
+            case "mark":
+              el.classList.add("marker");
+              el.innerHTML = "[ BREAK ]";
           }
           container.appendChild(el);
         };
@@ -68,12 +78,12 @@
         if (params.get("demo") === "true") {
           model.list = [{
             type: "level",
-            level: {levelName: "Castle Of Fear", levelId: "z00678g "}
+            entry: {name: "Castle Of Fear", id: "z00678g"}
           }, {
             type: "mark"
           }, {
-            type: "level",
-            level: {levelName: "Squished Scrubb Struggle", levelId: "lxfp2mg "}
+            type: "creator",
+            entry: {name: "Duckbag", id: "t0p3ya"}
           }];
           updateView();
         } else {
@@ -94,7 +104,7 @@
             let position = 0;
             let marks = 0;
             for (const entry of queue) {
-              if (!model.skipMark || entry.type === "level") {
+              if (!model.skipMark || entry.type !== "mark") {
                 position += 1;
               }
               if (position < model.minPosition) {
