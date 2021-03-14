@@ -55,7 +55,7 @@ If you're upgrading from a previous version, you can either user your existing b
 
 - To use your existing directory, you should remove the contents of the `src` folder.  (You might want to rename the old folder to `src-old` to keep as a backup until you have the new version working.)
 
-- To use a new directory, you'll want to copy the `.env` file, and the `twitchpoints.json` file if there is one. These files will be used to initialize the new version's configuration.
+- To use a new directory, you'll want to copy the `.env` file, and the `twitchpoints.json` file if there is one. These files will be used to initialize the new version's configuration. (These files are only used during upgrades to preserve the configuration from the old version; they are not needed for new installations.)
 
 ## Installing Project Dependencies
 Next, you'll need to open your computer's terminal, and navigate to the bot directory. (You can open the terminal on Windows by pressing "Window Key + R", then typing in `cmd`; or you can run PowerShell as your terminal.)
@@ -129,7 +129,7 @@ This is intended to make breaks that are scheduled using markers as predictaable
 ## Channel Points Integration
 If you are a Twitch affiliate or partner, you can configure the bot to listen for custom channel point reward redemptions using the `!reward` command.
 
-If you have configured `DATA_PATH` such that the bot can store persistent data, then the bot will automatically remember the rewards you configure.  Otherwise, the `!reward` command will give you inforamtion to add to your `.env` file so that reward configuration can be reloaded whenever you restart the bot.  (This is necessary because each streamer's rewards will have their own `custom-reward-id` values, which the bot needs to know in order to respond to the correct reward redemptions.)
+If your bot is able to write to its `config.json` file, then the bot will automatically remember the rewards you configure.  Otherwise, the `!reward` command will log instructions for updating your configuration files; you'll find the instructions in the terminal where the bot is running.
 
 The first step is to define a custom channel points reward for your Twitch channel.  The bot doesn't really care how you set the reward up, except the setting for Require Viewer to Enter Text must be enabled.  (This is necessary in order for the bot to see reward redemptions, and also is how the user will specify a level to be affected by the reward.)
 
@@ -141,9 +141,7 @@ Once you've created the custom reward in Twitch, you can use the `!reward` comma
 
 So for example you can give the command `!reward priority` to tell the bot you want to assocaite a custom reward with the `priority` behavior so that users can have their levels played sooner in exchange for channel points.  (Note that you give this command by redeeming a custom reward with the message `!reward priority`, and then once this is done, viewers can redeem the reward with a level code for a level that is in the queue.)
 
-If `DATA_PATH` is not defined, the bot will output a line of code to be added to the `.env` file.  The reward will be associated with the behavior for the current session, but you'll need to update `.env` before the next time you restart the bot in order for the reward behavior to be remembered.
-
-You can use `!noreward` to remove the association of a behavior from a reward.  Again if `DATA_PATH` is not configured then you'll have to update `.env` for the chnage to be remembered.
+You can use `!noreward` to remove the association of a behavior from a reward.  Again if the bot cannot write to its `config.json` file then you'll have to update the configuration manually for the chnage to be remembered; instructions will be logged to the terminal.
 
 ### Behaviors
 
