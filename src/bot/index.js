@@ -50,8 +50,12 @@ class ShenaniBot {
           return this.closeQueue();
         case "permit":
           return args[1] ? this.permitUser(args[1].toLowerCase()) : "";
+        case "giveboost":
+          return args[1] ? this.giveBoostToUser(args[1].toLowerCase()) : "";
         case "next":
           return this.nextLevel();
+        case "play":
+          return this.playSpecificLevel(args.slice(1).join(' ').toLowerCase());
         case "random":
           return this.randomLevel();
         case "mark":
@@ -74,6 +78,8 @@ class ShenaniBot {
         return args[1] ? this.addLevelToQueue(args[1], username) : "";
       case "remove":
         return args[1] ? this.removeLevelFromQueue(args[1], username) : "";
+      case "boost":
+        return args[1] ? this.boostLevel(args[1], username) : "";
       case "queue":
         return this.showQueue();
       case "commands":
@@ -120,11 +126,73 @@ class ShenaniBot {
     return response;
   }
 
+  giveBoostToUser(username) {
+    if (username[0] === "@") {
+      username = username.slice(1);
+    }
+
+    let response;
+    const user = this._getUser(username);
+
+    user.canBoost = true;
+    response = `@${username}, you may boost one level in the queue now.`;
+    return response;
+  }
+
   nextLevel() {
     let {empty, response} = this._dequeueLevel();
     if (!empty) {
       response = this._playLevel();
     }
+
+    olServer.sendLevels(this.queue);
+    return response;
+  }
+
+  playSpecificLevel(args) {
+    let index;
+
+    let match;
+    if (match = args.match(/^(next\s|last\s)?from\s@?([a-zA-Z0-9][a-zA-z0-9_]{3,24})\s*$/)) {
+      const last = match[1] === 'last ';
+      const start = last ? this.queue.length - 1 : 1;
+      const stop = i => last ? i > 0 : i < this.queue.length;
+      const increment = last ? -1 : 1;
+      for (let i = start; stop(i); i += increment) {
+        if (this.queue[i] && this.queue[i].submittedBy === match[2]) {
+          index = i;
+        }
+      }
+      if (!index) {
+        return `The queue contains no levels submitted by ${match[2]}`;
+      }
+    }
+    if (args.match(/[1-9]/) && (match = args.match(/^\d+/))) {
+      index = parseInt(args, 10) - 1;
+    }
+    if (typeof index != 'number') {
+      return "";
+    }
+    if (!this.queue[index]) {
+      return `There is no level at position ${index + 1} in the queue!`;
+    }
+    if (index === 0) {
+      return `You're already playing ${this.queue[index].levelName}@${this.queue[index].levelId}!`;
+    }
+
+    this._dequeueLevel();
+    index -= 1;
+    if (index > 0) {
+      const level = this.queue[index];
+      level.priority = true;
+      if (this.options.priority === 'rotation') {
+        level.round = this.currentRound;
+      }
+      this.queue.splice(index, 1)
+      this.queue.unshift(level);
+    }
+    let response = `Pulled ${this.queue[0].levelName}@${this.queue[0].levelId} to the front of the queue...`;
+    response += this._playLevel();
 
     olServer.sendLevels(this.queue);
     return response;
@@ -153,7 +221,7 @@ class ShenaniBot {
 
         response = `Random Level... `
       }
-      response = (response || '') + this._playLevel()
+      response = (response || '') + this._playLevel();
     }
 
     olServer.sendLevels(this.queue);
@@ -354,6 +422,15 @@ class ShenaniBot {
     return response;
   }
 
+  boostLevel(levelId, username) {
+    const user = this._getUser(username);
+    if (!user.canBoost && this.streamer !== username) {
+      return `You can't boost levels without permission from ${this.streamer}!`;
+    }
+
+    return this._processUrgentReward(levelId, () => user.canBoost = false);
+  }
+
   showQueue() {
     if (  this.queue.length === 0
        || (this.queue.length === 1 && !this.queue[0]) ) {
@@ -417,7 +494,7 @@ class ShenaniBot {
     return "";
   }
 
-  _processUrgentReward(levelId) {
+  _processUrgentReward(levelId, onSuccess = () => null) {
     const { level, response } = this._getQueuedLevelForReward(levelId);
     if (!level) {
       return response;
@@ -429,10 +506,11 @@ class ShenaniBot {
       newIndex = this.queue.length;
     }
     if (this.options.priority === 'rotation') {
-      const prevLevel = this.queue[nexIndex - 1];
+      const prevLevel = this.queue[newIndex - 1];
       level.round = prevLevel ? prevLevel.round : this.currentRound;
     }
     this.queue.splice(newIndex, 0, level);
+    onSuccess();
     return `${level.levelName}@${level.levelId} was marked as priority! It is now #${newIndex + 1} in the queue.`;
   }
 
@@ -477,13 +555,15 @@ class ShenaniBot {
   }
 
   _getQueuedLevelForReward(levelId) {
-    let response;
+    let {valid, response} = this._validateLevelId(levelId)
     const i = this.queue.findIndex(l => l && l.levelId === levelId);
 
-    if (i === 0) {
-      response = "You can't change priority of the level being played!";
-    } else if (i === -1) {
-      response = "That level is not in the queue!";
+    if (valid) {
+      if (i === 0) {
+        response = "You can't change priority of the level being played!";
+      } else if (i === -1) {
+        response = "That level is not in the queue!";
+      }
     }
 
     return {
