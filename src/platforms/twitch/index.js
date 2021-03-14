@@ -1,8 +1,14 @@
 const TMI = require('tmi.js');
 const ShenaniBot = require('../../bot/index');
-const env = require('../../config/config');
 const pb = require('@madelsberger/pausebuffer');
 const olServer = require('../../overlay/server');
+const configLoader = require('../../config/loader');
+
+const params = configLoader.load();
+
+process.on('SIGINT', function() {
+  process.exit(1);
+});
 
 const options = {
   options: {
@@ -12,18 +18,18 @@ const options = {
     reconnect: true
   },
   identity: {
-    username: env.auth.botUsername,
-    password: env.auth.oauthToken
+    username: params.auth.botUsername,
+    password: params.auth.oauthToken
   },
-  channels: [env.auth.channel]
+  channels: [params.auth.channel]
 };
 
 const _client = TMI.Client(options);
-const client = env.config.useThrottle ? pb.wrap(_client) : _client;
-const shenanibot = new ShenaniBot(env);
+const client = params.config.useThrottle ? pb.wrap(_client) : _client;
+const shenanibot = new ShenaniBot(params);
 
-if (env.config.overlayPort) {
-  olServer.start(env.config);
+if (params.config.overlayPort) {
+  olServer.start(params.config);
 }
 
 (async function main() {
@@ -32,7 +38,7 @@ if (env.config.overlayPort) {
   console.log('Don\'t worry if it says \'Error: No response from twitch\', it should still work!');
   
   client.on('connected', (address, port) => {
-    client.action(env.auth.channel, 'Bot Connected!');
+    client.action(params.auth.channel, 'Bot Connected!');
   });
 
   client.on('chat', async (channel, context, message, self) => {
@@ -42,7 +48,7 @@ if (env.config.overlayPort) {
       let response = await shenanibot.command(message,
               context.username, context['custom-reward-id']);
       for (const message of response.split('\n')) {
-        client.say(env.auth.channel, message);
+        client.say(params.auth.channel, message);
       }
     })();
   });

@@ -1,7 +1,7 @@
 const Rumpus = require("@bscotch/rumpus-ce");
 const ViewerLevel = require("./lib/level");
 const olServer = require("../overlay/server");
-const rewardHelper = require("../config/rewardHelper");
+const { rewardHelper } = require("../config/loader");
 
 class ShenaniBot {
   constructor(botOptions) {
@@ -110,7 +110,7 @@ class ShenaniBot {
     let response;
     const user = this._getUser(username);
 
-    if (this.queueOpen && (user.levelsSubmitted < this.options.levelLimit || this.options.levelLimit === 0)) {
+    if (this.queueOpen && (user.levelsSubmitted < this.options.levelLimit || !this._hasLimit())) {
       response = `${username} is able to submit levels.`;
       return response;
     }
@@ -205,19 +205,8 @@ class ShenaniBot {
       this.twitch.usePointsToAdd = true;
     }
 
-    let response = "Registered reward to " + rewards[rewardType];
-    if (this.options.dataPath) {
-        rewardHelper.updateRewardConfigFile(behaviors);
-    } else {
-        const optName = rewardHelper.configKeyFor(rewardType);
-        response = response
-                 + "; to make this change persist, add the following line to "
-                 + "your ShenanaBot .env file:\n"
-                 + `${optName}="${rewardId}"\n`
-                 + `(If your .env file already has a value for ${optName}, `
-                 + "you'll need to remove it; multiple rewards cannot share "
-                 + "a behavior.)";
-    }
+    let response = "Registered reward to " + rewards[rewardType] + ". "
+                 + rewardHelper.updateRewardConfig(behaviors);
     return response;
   }
 
@@ -241,16 +230,8 @@ class ShenaniBot {
       this.twitch.usePointsToAdd = false;
     }
 
-    let response = "Removed reward to " + rewards[rewardType];
-    if (this.options.dataPath) {
-        rewardHelper.updateRewardConfigFile(behaviors);
-    } else {
-        const optName = rewardHelper.configKeyFor(rewardType);
-        response = response
-                 + "; to make this change persist, remove the following line "
-                 + "from your ShenanaBot .env file:\n"
-                 + `${optName}="${rewardId}"\n`;
-    }
+    let response = "Removed reward to " + rewards[rewardType] + ". "
+                 + rewardHelper.updateRewardConfig(behaviors);
     return response;
   }
 
@@ -301,7 +282,7 @@ class ShenaniBot {
       return response;
     }
 
-    if (this.options.levelLimit > 0 && user.levelsSubmitted >= this.options.levelLimit && !user.permit && rewardType !== 'unlimit') {
+    if (this._hasLimit() && user.levelsSubmitted >= this.options.levelLimit && !user.permit && rewardType !== 'unlimit') {
       response = "You have submitted the maximum number of levels!";
       if (this.options.levelLimitType === "active") {
         response += " (You can add more when one of yours has been played.)";
@@ -335,7 +316,7 @@ class ShenaniBot {
     user.permit = (username === this.streamer);
 
     response = `${level.levelName}@${level.levelId} was added! Your level is #${pos} in the queue.`;
-    response = this.options.levelLimit > 0 ? `${response} Submission ${user.levelsSubmitted}/${this.options.levelLimit}` : response;
+    response = this._hasLimit() ? `${response} Submission ${user.levelsSubmitted}/${this.options.levelLimit}` : response;
 
     if (this.queue.length === 1) {
       response = `${response}\n${this._playLevel()}`;
@@ -621,6 +602,10 @@ class ShenaniBot {
       }
     }
     this.queue.splice(index, 1);
+  }
+
+  _hasLimit() {
+    return this.options.levelLimitType !== 'none' && this.options.levelLimit > 0;
   }
 }
 
