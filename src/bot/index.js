@@ -2,6 +2,7 @@ const Rumpus = require("@bscotch/rumpus-ce");
 const { ViewerLevel, Creator } = require("./lib/queueEntry");
 const olServer = require("../overlay/server");
 const { rewardHelper } = require("../config/loader");
+const clipboard = require('clipboardy');
 
 class ShenaniBot {
   constructor(botOptions) {
@@ -646,6 +647,9 @@ class ShenaniBot {
         return `Now playing ${this.queue[0].display} submitted by ${this.queue[0].submittedBy}`;
       }
       if (this.queue[0].type === "creator") {
+        if (this.options.creatorCodeMode === 'clipboard') {
+          clipboard.writeSync(this.queue[0].id);
+	}
         return `Now playing a level from ${this.queue[0].display} submitted by ${this.queue[0].submittedBy}`;
       }
     }

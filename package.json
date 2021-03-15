@@ -7,6 +7,7 @@
     "@bscotch/rumpus-ce": "^1.2.4",
     "@madelsberger/pausebuffer": "^1.0.0",
     "axios": "^0.21.1",
+    "clipboardy": "^2.3.0",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "inquirer": "^7.3.3",
