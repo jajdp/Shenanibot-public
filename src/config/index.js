@@ -228,6 +228,27 @@ const questions = {
         filter: i => typeof i === 'string' && i.match(/^\s*[1-9]\d*\s*$/) ? parseInt(i) : i,
         validate: i => (typeof i !== 'number') ? 'Please enter a number of levels' : true
       }
+    ),
+    buildConfigQuestion(
+      'config.creatorCodeMode', {
+        type: 'list',
+        message: 'Creator Code Mode:',
+        choices: [{
+          name: 'Copy the creator code to the clipboard',
+          value: 'clipboard'
+        }, {
+          name: 'Show the creator code in chat but take no further action',
+          value: 'manual'
+        }, {
+          name: 'Do not allow creator codes to be submitted',
+          value: 'reject'
+	}]
+      },
+        'You can allow viewers to submit creator codes if they don\'t have a specific\n'
+      + 'level they want to submit. The Creator Code Mode determines whether or not\n'
+      + 'creator codes are accepted into the queue and, if so, how the bot behaves\n'
+      + 'when a creator code reaches the top of the queue (since unlike level codes\n'
+      + 'they cannot simply be bookmarked).'
     )
   ],
 

@@ -330,8 +330,8 @@ class ShenaniBot {
     }
 
     let type = this._getIdType(id)
-    if (!type) {
-      return "Please enter eithe a valid 7-digit level code, or a valid 6-digit creator code.";
+    if (response = this._typeError(type)) {
+      return response;
     }
 
     if (this._hasLimit() && user.levelsSubmitted >= this.options.levelLimit && !user.permit && rewardType !== "unlimit") {
@@ -397,8 +397,9 @@ class ShenaniBot {
 
   removeLevelFromQueue(id, username) {
     let type = this._getIdType(id)
-    if (!type) {
-      return "Please enter eithe a valid 7-digit level code, or a valid 6-digit creator code.";
+    let response;
+    if (response = this._typeError(type)) {
+      return response;
     }
 
     const i = this.queue.findIndex(l => l && l.id === id);
@@ -557,14 +558,14 @@ class ShenaniBot {
     const i = this.queue.findIndex(l => l && l.id === id);
     let response;
 
-    if (type) {
-      if (i === 0) {
-        response = "You can't change priority of the level being played!";
-      } else if (i === -1) {
-        response = "That level is not in the queue!";
-      }
-    } else {
-      response = "Please enter eithe a valid 7-digit level code, or a valid 6-digit creator code.";
+    if (response = this._typeError(type)) {
+      return response;
+    }
+
+    if (i === 0) {
+      response = "You can't change priority of the level being played!";
+    } else if (i === -1) {
+      response = "That level is not in the queue!";
     }
 
     return {
@@ -657,6 +658,16 @@ class ShenaniBot {
     }
     if (id.match(/^[a-z0-9]{6}$/)) {
       return "creator";
+    }
+    return null;
+  }
+
+  _typeError(type) {
+    if (this.options.creatorCodeMode === 'reject' && type !== 'level') {
+      return "Please enter a valid level code.";
+    }
+    if (!type) {
+      return "Please enter eithe a valid 7-digit level code, or a valid 6-digit creator code.";
     }
     return null;
   }

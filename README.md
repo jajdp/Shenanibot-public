@@ -93,7 +93,7 @@ The bot needs a token with the following permissions:
 - View, and, and delete own Levelhead level bookmarks
 
 ### Queue Management Options
-Here you can decide whether levels are taken into the queue in the order received, or whether viewers "take turns" in a rotation. You can also configure limits on how many levels each viewer may submit.
+Here you can decide whether levels are taken into the queue in the order received, or whether viewers "take turns" in a rotation; configure limits on how many levels each viewer may submit; and determine how to handle creator codes.
 
 ### Chat Options
 Options that control the bot's interaction with chat are found here. You can change the prefix used to recognize bot cmmands. (By default this is !, and it is recommended to use this if possible.) You can also enable or disable message throttling.
