@@ -26,6 +26,9 @@
       .command-keyword {
         color: #bfbf5f;
       }
+      .hidden {
+        visibility: hidden;
+      }
     </style>
   </head>
   <body>
@@ -35,17 +38,29 @@
       </span>
       <span class="command-text">
         Submit a level with <span class="command-keyword"></span>
+        <span class="creator-command">
+          or <span class="command-keyword"></span>
+        </span>
       </span>
     </div>
     <script language="javascript" type="text/javascript">
       const params = new URLSearchParams(window.location.search);
       const model = {
         status: "",
-        command: ""
+        command: "",
+        acceptCreatorCode: false
       };
       const updateView = () => {
         document.getElementsByClassName("status-keyword")[0].innerHTML = model.status;
         document.getElementsByClassName("command-keyword")[0].innerHTML = `${model.command} <i>levelId</i>`;
+
+        const creatorEl = document.getElementsByClassName("creator-command")[0];
+        if (model.acceptCreatorCode) {
+          creatorEl.classList.remove("hidden");
+          document.getElementsByClassName("command-keyword")[1].innerHTML = `${model.command} <i>creatorId</i>`;
+        } else {
+          creatorEl.classList.add("hidden");
+        }
         if (model.status === 'open') {
           document.getElementsByClassName("container")[0].classList.add("queue-open");
         } else {
@@ -64,6 +79,7 @@
             const data = JSON.parse(m.data);
             model.status = data.status;
             model.command = data.command;
+            model.acceptCreatorCode = data.acceptCreatorCode;
             updateView();
           };
         }

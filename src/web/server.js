@@ -46,6 +46,11 @@ module.exports = {
       clients: [],
       onConnect
     };
-    return endpoints[url].clients;
+  },
+
+  broadcast: (url, message) => {
+    for (const ws of endpoints[url].clients) {
+      ws.send(message);
+    }
   }
 };

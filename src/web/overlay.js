@@ -1,17 +1,20 @@
 const httpServer = require("./server");
 
+const statusUrl = '/overlay/status';
+const levelsUrl = '/overlay/levels';
+
 const state = {
     prefix: "",
+    acceptCreatorCode: false,
     levels: "[]",
     status: ""
 };
 
-const clients = {};
-
 const setStatus = open => {
     state.status = (JSON.stringify({
         status: open ? "open" : "closed",
-        command: `${state.prefix}add`
+        command: `${state.prefix}add`,
+        acceptCreatorCode: state.acceptCreatorCode
     }));
 };
 
@@ -19,23 +22,22 @@ module.exports = {
   init: () => {
     const config = httpServer.getConfig();
     state.prefix = config.prefix;
+    state.acceptCreatorCode = config.creatorCodeMode !== 'reject';
     setStatus(true);
 
     console.log(`Go to http://localhost:${config.httpPort}/overlay/ for overlay setup instructions`);
 
-    clients.levels = httpServer.register('/overlay/levels', ws => {
+    httpServer.register(levelsUrl, ws => {
       ws.send(state.levels);
     });
-    clients.status = httpServer.register('/overlay/status', ws => {
+    httpServer.register(statusUrl, ws => {
       ws.send(state.status);
     });
   },
 
   sendStatus: open => {
     setStatus(open);
-    for (const ws of clients.status) {
-      ws.send(state.status);
-    }
+    httpServer.broadcast(statusUrl, state.status);
   },
 
   sendLevels: queue => {
@@ -43,8 +45,6 @@ module.exports = {
       type: e ? e.type : "mark",
       entry: e || undefined
     })));
-    for (const ws of clients.levels) {
-      ws.send(state.levels);
-    }
+    httpServer.broadcast(levelsUrl, state.levels);
   }
 };
