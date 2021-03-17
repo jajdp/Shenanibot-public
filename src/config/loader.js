@@ -56,11 +56,32 @@ function loadFromJson() {
   if (fs.existsSync(configFilename)) {
     try {
       const data = fs.readFileSync(configFilename);
-      return JSON.parse(data);
+      return convertToCurrentVersion(JSON.parse(data));
     } catch(e) {}
   }
 
   return null;
+}
+
+function convertToCurrentVersion(opts) {
+  const version = opts.version || [0,0,0];
+
+  if (version[0] > 1 || (version[0] === 1 && version[1] > 3)) {
+    return opts;
+  }
+
+  const updatedOpts = {...opts};
+  updatedOpts.version = [1,4,0];
+
+  try {
+    updatedOpts.config.httpPort = opts.config.overlayPort;
+    delete updatedOpts.config.overlayPort;
+  } finally {
+    try {
+      loader.save(updatedOpts);
+    } catch(e) {}
+  }
+  return updatedOpts;
 }
 
 function loadFromLegacy() {

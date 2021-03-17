@@ -1,6 +1,6 @@
 {
   "name": "shenanibot-public",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "A Twitch bot that manages a queue of levels for Levelhead streamers",
   "main": "src/platforms/twitch/index.js",
   "dependencies": {

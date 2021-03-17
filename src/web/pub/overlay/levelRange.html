@@ -94,7 +94,7 @@
           model.skipMark = (params.get("skip_mark") === "true");
           model.minPosition = params.has("min_position") ? parseInt(params.get("min_position"), 10) || 1 : 1;
 
-          const ws = new WebSocket(`ws://${window.location.host}/levels`);
+          const ws = new WebSocket(`ws://${window.location.host}/overlay/levels`);
           ws.onmessage = m => {
             const queue = JSON.parse(m.data);
             const list = [];

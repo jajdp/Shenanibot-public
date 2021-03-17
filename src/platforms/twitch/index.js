@@ -1,7 +1,7 @@
 const TMI = require('tmi.js');
 const ShenaniBot = require('../../bot/index');
 const pb = require('@madelsberger/pausebuffer');
-const olServer = require('../../overlay/server');
+const httpServer = require('../../web/server');
 const configLoader = require('../../config/loader');
 
 const params = configLoader.load();
@@ -9,6 +9,10 @@ const params = configLoader.load();
 process.on('SIGINT', function() {
   process.exit(1);
 });
+
+if (params.config.httpPort) {
+  httpServer.start(params.config);
+}
 
 const options = {
   options: {
@@ -27,10 +31,6 @@ const options = {
 const _client = TMI.Client(options);
 const client = params.config.useThrottle ? pb.wrap(_client) : _client;
 const shenanibot = new ShenaniBot(params);
-
-if (params.config.overlayPort) {
-  olServer.start(params.config);
-}
 
 (async function main() {
   // Connect bot to server

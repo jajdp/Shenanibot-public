@@ -59,7 +59,7 @@
           model.command = "!add";
           updateView();
         } else {
-          const ws = new WebSocket(`ws://${window.location.host}/status`);
+          const ws = new WebSocket(`ws://${window.location.host}/overlay/status`);
           ws.onmessage = m => {
             const data = JSON.parse(m.data);
             model.status = data.status;

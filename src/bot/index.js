@@ -1,6 +1,6 @@
 const Rumpus = require("@bscotch/rumpus-ce");
 const { ViewerLevel, Creator } = require("./lib/queueEntry");
-const olServer = require("../overlay/server");
+const overlay = require("../web/overlay");
 const { rewardHelper } = require("../config/loader");
 const clipboard = require('clipboardy');
 
@@ -13,8 +13,11 @@ class ShenaniBot {
     this.queueOpen = true;
     this.users = {};
     this.levels = {};
-    if (this.options.priority === "rotation") {
+    if (botOptions.priority === "rotation") {
       this.currentRound = 1;
+    }
+    if (botOptions.config.httpPort) {
+      overlay.init();
     }
     this.twitch = {
       rewards: {
@@ -95,13 +98,13 @@ class ShenaniBot {
 
   openQueue() {
     this.queueOpen = true;
-    olServer.sendStatus(true);
+    overlay.sendStatus(true);
     return "The queue has been opened, add some levels to it!";
   }
 
   closeQueue() {
     this.queueOpen = false;
-    olServer.sendStatus(false);
+    overlay.sendStatus(false);
     return "The queue has been closed! No more levels :(";
   }
 
@@ -137,7 +140,7 @@ class ShenaniBot {
       response = this._playLevel();
     }
 
-    olServer.sendLevels(this.queue);
+    overlay.sendLevels(this.queue);
     return response;
   }
 
@@ -186,7 +189,7 @@ class ShenaniBot {
     let response = `Pulled ${this.queue[0].display} to the front of the queue...`;
     response += this._playLevel();
 
-    olServer.sendLevels(this.queue);
+    overlay.sendLevels(this.queue);
     return response;
   }
 
@@ -216,7 +219,7 @@ class ShenaniBot {
       response = (response || "") + this._playLevel();
     }
 
-    olServer.sendLevels(this.queue);
+    overlay.sendLevels(this.queue);
     return response;
   }
 
@@ -227,7 +230,7 @@ class ShenaniBot {
     }
 
     this.queue.push(null);
-    olServer.sendLevels(this.queue);
+    overlay.sendLevels(this.queue);
     return "A marker has been added to the queue.";
   }
 
@@ -378,7 +381,7 @@ class ShenaniBot {
     }
 
     const pos = this._enqueue(entry, user);
-    olServer.sendLevels(this.queue);
+    overlay.sendLevels(this.queue);
 
     user.levelsSubmitted++;
     user.permit = (username === this.streamer);
@@ -418,7 +421,7 @@ class ShenaniBot {
     }
 
     this._removeFromQueue(i);
-    olServer.sendLevels(this.queue);
+    overlay.sendLevels(this.queue);
     if (entry.type === "level") {
       this.levels[id] = (username === this.streamer) ? `was removed by ${username}; it can't be re-added` : null;
     }

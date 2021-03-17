@@ -98,8 +98,8 @@ Here you can decide whether levels are taken into the queue in the order receive
 ### Chat Options
 Options that control the bot's interaction with chat are found here. You can change the prefix used to recognize bot cmmands. (By default this is !, and it is recommended to use this if possible.) You can also enable or disable message throttling.
 
-### Overlay Options
-You can enable or diable the overlay server, which allows you to include information about the queue in your stream layout (provided your streaming software can be set up to display a web view, such as with OBS Browser Sources).
+### Web Server Options
+You can enable or diable the embedded web server. This allows you to use overlays to include information about the queue in your stream layout (provided your streaming software can be set up to display a web view, such as with OBS Browser Sources) and can be used to provide an interactive UI for choosing levels for submitted creator codes.
 
 Once you've configured this feature, the bot will provide a URL with setup instructions at start-up. (Most of the overlay setup is done in your streaming software.)
 

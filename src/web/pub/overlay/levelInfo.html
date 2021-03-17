@@ -85,7 +85,7 @@
             document.body.innerHTML = "Missing required query parameters; position and skip_mark must be specified";
             return;
           }
-          const ws = new WebSocket(`ws://${window.location.host}/levels`);
+          const ws = new WebSocket(`ws://${window.location.host}/overlay/levels`);
           ws.onmessage = m => {
             const queue = JSON.parse(m.data);
             const item = ((params.get("skip_mark") === "true") ? queue.filter(e => e.type === "level") : queue)[parseInt(params.get("position"), 10) - 1];
@@ -94,7 +94,7 @@
             model.submittedBy = "";
             model.type = "";
             if (item) {
-              model.type = item.type === "mark" ? "marker" : model.type;
+              model.type = item.type === "mark" ? "marker" : item.type;
               switch (item.type) {
                 case "level":
                   model.name = item.entry.name;
