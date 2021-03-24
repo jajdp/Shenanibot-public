@@ -2,9 +2,9 @@
   <head>
     <style type="text/css">
       #display-area {
-        border: 1px #000000 solid;
+        border: 10px #ffffff ridge;
         display: inline-block;
-        margin: 10px;
+        margin-bottom: 10px;
       }
       #content-container {
         opacity: 0;
@@ -21,7 +21,7 @@
         height: 600px;
         opacity: 0.9;
         padding: 10px;
-        position: absolute;
+        position: relative;
         width: 800px;
         z-index: 0;
       }
@@ -32,6 +32,7 @@
         overflow: hidden;
         padding: 10px;
         position: absolute;
+        top: 0;
         width: 800px;
         z-index: 1;
       }
@@ -209,7 +210,7 @@
         const listEl = document.getElementById("list");
         if (reset) {
           listEl.innerHTML = "";
-	}
+        }
         let n = 1;
         for (const level of model.levels) {
           if (!level.el) {
