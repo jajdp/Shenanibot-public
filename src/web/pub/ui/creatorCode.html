@@ -173,10 +173,12 @@
         detailsRow.classList.add('level-details-row');
         textColumn.appendChild(detailsRow);
 
-        const difficulty = document.createElement('img');
-        difficulty.classList.add('level-difficulty');
-        difficulty.src = `/img/difficulty-${level.difficulty}.svg`;
-        detailsRow.appendChild(difficulty);
+        if (level.difficulty) {
+          const difficulty = document.createElement('img');
+          difficulty.classList.add('level-difficulty');
+          difficulty.src = `/img/difficulty-${level.difficulty}.svg`;
+          detailsRow.appendChild(difficulty);
+	}
 
         const tags = document.createElement('span');
         tags.classList.add('level-tags');

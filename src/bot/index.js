@@ -744,7 +744,7 @@ class ShenaniBot {
         date: li.createdAt,
         avatar: li.avatarUrl(),
         tags: li.tagNames,
-        difficulty: li.stats.Diamonds,
+        difficulty: li.stats.Players > 10 ? li.stats.Diamonds : null,
         played: !!(li.interactions && li.interactions.played),
         beaten: !!(li.interactions && li.interactions.completed),
       })));
