@@ -1,0 +1,247 @@
+<html>
+  <head>
+    <style type="text/css">
+      #display-area {
+        border: 1px #000000 solid;
+        display: inline-block;
+        margin: 10px;
+      }
+      #content-container {
+        opacity: 0;
+        position: relative;
+        transition-property: opacity;
+        transition-duration: 2s;
+      }
+      #content-container.active {
+        opacity: 1;
+      }
+      #background {
+        background-color: #2f0000;
+        border-radius: 20px;
+        height: 600px;
+        opacity: 0.9;
+        padding: 10px;
+        position: absolute;
+        width: 800px;
+        z-index: 0;
+      }
+      #content {
+        display: flex;
+        flex-direction: column;
+        height: 600px;
+        overflow: hidden;
+        padding: 10px;
+        position: absolute;
+        width: 800px;
+        z-index: 1;
+      }
+      #header {
+        color: #ffffff;
+        flex: none;
+        font-size: 36px;
+        padding: 5px;
+        margin-bottom: 5px;
+      }
+      .creator-id {
+        color: #cfcfcf;
+        font-size: 27px;
+      }
+      #list {
+        align-items: center;
+        display: flex;
+        flex: auto;
+        flex-direction: column;
+        overflow-y: auto;
+        position: relative;
+      }
+      ::-webkit-scrollbar {
+        display: none;
+      }
+      .level {
+        align-items: center;
+        background-color: #2f2f7f;
+        border-radius: 10px;
+        color: #7fff7f;
+        display: flex;
+        flex: none;
+        font-size: 32px;
+        margin: 5px;
+        padding: 10px;
+        position: relative;
+        width: 90%;
+      }
+      .cover {
+        background-color: #000000;
+        border-radius: 10px;
+        height: 100%;
+        left: 6px;
+        opacity: .5;
+        position: absolute;
+        top: 3px;
+        width: 100%;
+      }
+      .cover:hover {
+        opacity: 0;
+      }
+      .level-avatar {
+        flex: none;
+        height: 64px;
+        margin-right: 5px;
+        width: 64px;
+      }
+      .level-text-column {
+        flex: auto;
+      }
+      .level-id {
+        color: #5fcf5f;
+        font-size: 24px;
+      }
+      .level-details-row {
+        display: flex;
+      }
+      .level-difficulty {
+        height: 32px;
+        margin-right: 10px;
+        width: 100px;
+      }
+      .level-tags {
+        align-self: center;
+        color: #4fa74f;
+        font-size: 20px;
+      }
+      .level-interaction {
+        flex: none;
+        height: 64px;
+        width: 64px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="display-area">
+      <div id="content-container">
+        <div id="background"></div>
+        <div id="content">
+          <div id="header">
+            <span id="name"></span>'s Profile
+            <span class="creator-id">
+              (@<span id="creator-id"></span>)
+            </span>
+          </div>
+          <div id="list"></div>
+        </div>
+      </div>
+    </div>
+
+    <script language="javascript" type="text/javascript">
+      let ws;
+      const model = {
+        creatorId: null,
+        name: null,
+        levels: []
+      };
+
+      const buildLevelEl = level => {
+        level.el = document.createElement('div');
+        level.el.classList.add("level");
+
+        const avatar = document.createElement('img');
+        avatar.classList.add('level-avatar');
+        avatar.src = level.avatar;
+        level.el.appendChild(avatar);
+
+        const textColumn = document.createElement('div');
+        textColumn.classList.add('level-text-column');
+        level.el.appendChild(textColumn);
+
+        const nameRow = document.createElement('div');
+        nameRow.classList.add('level-name-row');
+        textColumn.appendChild(nameRow);
+
+        const levelName = document.createElement('span');
+        levelName.classList.add('level-name');
+        levelName.innerHTML = level.name;
+        nameRow.appendChild(levelName);
+
+        const levelCode = document.createElement("span");
+        levelCode.classList.add('level-id');
+        levelCode.innerHTML = ` (${level.id})`;
+        nameRow.appendChild(levelCode);
+
+        const detailsRow = document.createElement('div');
+        detailsRow.classList.add('level-details-row');
+        textColumn.appendChild(detailsRow);
+
+        const difficulty = document.createElement('img');
+        difficulty.classList.add('level-difficulty');
+        difficulty.src = `/img/difficulty-${level.difficulty}.svg`;
+        detailsRow.appendChild(difficulty);
+
+        const tags = document.createElement('span');
+        tags.classList.add('level-tags');
+        tags.innerHTML = level.tags.join(', ');
+        detailsRow.appendChild(tags);
+
+        const interaction = document.createElement('img');
+        interaction.classList.add('level-interaction');
+        interaction.src = level.beaten ? '/img/beaten.svg'
+                        : level.played ? '/img/played.svg'
+                        : '/img/unplayed.svg';
+        level.el.appendChild(interaction);
+
+        const cover = document.createElement('div');
+        cover.classList.add("cover");
+        cover.onclick = () => choose(level);
+        level.el.appendChild(cover);
+      };
+
+      const updateView = reset => {
+        const contentContainerEl = document.getElementById("content-container");
+        if (!model.creatorId) {
+          contentContainerEl.classList.remove("active");
+          return;
+        }
+
+        contentContainerEl.classList.add("active");
+        document.getElementById("creator-id").innerHTML = model.creatorId;
+        document.getElementById("name").innerHTML = model.name;
+
+        const listEl = document.getElementById("list");
+        if (reset) {
+          listEl.innerHTML = "";
+	}
+        let n = 1;
+        for (const level of model.levels) {
+          if (!level.el) {
+            buildLevelEl(level);
+            listEl.appendChild(level.el);
+          }
+          level.el.style.order = n;
+          n += 1;
+        }
+      };
+
+      const choose = level => {
+        ws.send(JSON.stringify({creatorId: model.creatorId, level}));
+      };
+
+      (() => {
+        ws = new WebSocket(`ws://${window.location.host}/ui/creatorCode`);
+        ws.onmessage = m => {
+          const data = JSON.parse(m.data);
+          switch (data.type) {
+            case "info":
+              model.creatorId = data.creatorId;
+              model.name = data.name;
+              model.levels = data.levels;
+              break;
+            case "levels":
+              model.levels = model.levels.concat(data.levels);
+              break;
+          }
+          updateView(data.type === "info");
+        };
+      })();
+    </script>
+  </body>
+</html>

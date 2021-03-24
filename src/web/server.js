@@ -32,6 +32,9 @@ module.exports = {
         endpoints[req.url].clients
                           .splice(endpoints[req.url].clients.indexOf(ws), 1);
       });
+      ws.on("message", data => {
+        endpoints[req.url].onMessage(data, ws);
+      });
       endpoints[req.url].onConnect(ws, req);
     });
 
@@ -41,10 +44,11 @@ module.exports = {
 
   getConfig: () => botConfig,
 
-  register: (url, onConnect = (ws,req) => {}) => {
+  register: (url, onConnect = (ws,req) => {}, onMessage = (msg,ws) => {}) => {
     endpoints[url] = {
       clients: [],
-      onConnect
+      onConnect,
+      onMessage
     };
   },
 

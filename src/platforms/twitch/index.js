@@ -30,7 +30,8 @@ const options = {
 
 const _client = TMI.Client(options);
 const client = params.config.useThrottle ? pb.wrap(_client) : _client;
-const shenanibot = new ShenaniBot(params);
+const shenanibot = new ShenaniBot(params,
+                                  m => client.say(params.auth.channel, m));
 
 (async function main() {
   // Connect bot to server

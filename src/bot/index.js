@@ -1,11 +1,13 @@
 const Rumpus = require("@bscotch/rumpus-ce");
 const { ViewerLevel, Creator } = require("./lib/queueEntry");
 const overlay = require("../web/overlay");
+const creatorCodeUi = require("../web/creatorCodeUi");
 const { rewardHelper } = require("../config/loader");
-const clipboard = require('clipboardy');
+const clipboard = require("clipboardy");
 
 class ShenaniBot {
-  constructor(botOptions) {
+  constructor(botOptions, sendAsync = _ => {}) {
+    this.sendAsync = sendAsync;
     this.rce = new Rumpus.RumpusCE(botOptions.auth.delegationToken);
     this.options = botOptions.config;
     this.streamer = botOptions.auth.streamer;
@@ -18,6 +20,9 @@ class ShenaniBot {
     }
     if (botOptions.config.httpPort) {
       overlay.init();
+      if (botOptions.config.creatorCodeMode === "webui") {
+        creatorCodeUi.init((c, l) => this._specifyLevelForCreator(c, l));
+      }
     }
     this.twitch = {
       rewards: {
@@ -300,13 +305,13 @@ class ShenaniBot {
       return "Please enter a valid level code to check.";
     }
 
-    let levelInfo = await this.rce.levelhead.levels.search({ levelIds: levelId, includeAliases: true, includeMyInteractions: true } );
+    let levelInfo = await this.rce.levelhead.levels.search({ levelIds: levelId, includeMyInteractions: true } );
 
     if (!levelInfo.length) {
       return "Oops! That level does not exist!";
     }
 
-    const level = new ViewerLevel(levelInfo[0].levelId, levelInfo[0].title, '');
+    const level = new ViewerLevel(levelInfo[0].levelId, levelInfo[0].title, "");
     const interactions = levelInfo[0].interactions;
     let verb = "not played";
     if (interactions) {
@@ -353,7 +358,7 @@ class ShenaniBot {
         return `That level ${reason}!`;
       }
 
-      const levelInfo = await this.rce.levelhead.levels.search({ levelIds: id, includeAliases: true }, { doNotUseKey: true });
+      const levelInfo = await this.rce.levelhead.levels.search({ levelIds: id }, { doNotUseKey: true });
 
       if (!levelInfo.length) {
         return "Oops! That level does not exist!";
@@ -627,6 +632,9 @@ class ShenaniBot {
       };
     }
 
+    if (this.options.creatorCodeMode === "webui") {
+      creatorCodeUi.clearCreatorInfo();
+    }
     if (this.queue[0] && this.queue[0].type === "level") {
       this.rce.levelhead.bookmarks.remove(this.queue[0].id);
       this.levels[this.queue[0].id] = "was already played";
@@ -650,9 +658,19 @@ class ShenaniBot {
         return `Now playing ${this.queue[0].display} submitted by ${this.queue[0].submittedBy}`;
       }
       if (this.queue[0].type === "creator") {
-        if (this.options.creatorCodeMode === 'clipboard') {
-          clipboard.writeSync(this.queue[0].id);
-	}
+        switch (this.options.creatorCodeMode) {
+          case "clipboard":
+            clipboard.writeSync(this.queue[0].id);
+            break;
+          case "webui":
+            creatorCodeUi.setCreatorInfo({
+              creatorId: this.queue[0].id,
+              name: this.queue[0].name
+            });
+            this._getLevelsForCreator(this.queue[0].id,
+                                      creatorCodeUi.addLevelsToCreatorInfo)
+            break;
+        }
         return `Now playing a level from ${this.queue[0].display} submitted by ${this.queue[0].submittedBy}`;
       }
     }
@@ -670,7 +688,7 @@ class ShenaniBot {
   }
 
   _typeError(type) {
-    if (this.options.creatorCodeMode === 'reject' && type !== 'level') {
+    if (this.options.creatorCodeMode === "reject" && type !== "level") {
       return "Please enter a valid level code.";
     }
     if (!type) {
@@ -706,6 +724,51 @@ class ShenaniBot {
       }
     }
     this.queue.splice(index, 1);
+  }
+
+  async _getLevelsForCreator(creatorId, levelsCb) {
+    const maxLevels = 128;
+    let gotMaxLevels;
+    let query = {
+      userIds: creatorId,
+      limit: maxLevels,
+      sort: "createdAt",
+      includeMyInteractions: true,
+      includeStats: true,
+    };
+
+    do {
+      let levelInfo = await this.rce.levelhead.levels.search(query);
+      levelsCb(levelInfo.map(li => ({
+        ...new ViewerLevel(li.levelId, li.title, ""),
+        date: li.createdAt,
+        avatar: li.avatarUrl(),
+        tags: li.tagNames,
+        difficulty: li.stats.Diamonds,
+        played: !!(li.interactions && li.interactions.played),
+        beaten: !!(li.interactions && li.interactions.completed),
+      })));
+
+      gotMaxLevels = levelInfo.length === maxLevels;
+      if (gotMaxLevels) {
+        query.maxCreatedAt = levelInfo[maxLevels - 1].createdAt;
+        query.tiebreakerItemId = levelInfo[maxLevels - 1]._id;
+        await new Promise(r => setTimeout(r, 1000));
+      }
+    } while( gotMaxLevels );
+  }
+
+  _specifyLevelForCreator(creatorId, level) {
+    const entry = this.queue[0];
+    if (!entry || entry.type !== "creator" || entry.id !== creatorId) {
+      return false;
+    }
+    this.queue[0] = new ViewerLevel(
+                             level.id, level.name, this.queue[0].submittedBy);
+    this.sendAsync( this._playLevel() );
+
+    overlay.sendLevels(this.queue);
+    return true;
   }
 
   _hasLimit() {
