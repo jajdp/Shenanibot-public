@@ -15,12 +15,12 @@ class ShenaniBot {
     this.queueOpen = true;
     this.users = {};
     this.levels = {};
-    if (botOptions.priority === "rotation") {
+    if (this.options.priority === "rotation") {
       this.currentRound = 1;
     }
-    if (botOptions.config.httpPort) {
+    if (this.options.httpPort) {
       overlay.init();
-      if (botOptions.config.creatorCodeMode === "webui") {
+      if (this.options.creatorCodeMode === "webui") {
         creatorCodeUi.init((c, l) => this._specifyLevelForCreator(c, l));
       }
     }
@@ -759,12 +759,16 @@ class ShenaniBot {
   }
 
   _specifyLevelForCreator(creatorId, level) {
-    const entry = this.queue[0];
-    if (!entry || entry.type !== "creator" || entry.id !== creatorId) {
+    const oldEntry = this.queue[0];
+    if (!oldEntry || oldEntry.type !== "creator"
+                  || oldEntry.id !== creatorId) {
       return false;
     }
-    this.queue[0] = new ViewerLevel(
-                             level.id, level.name, this.queue[0].submittedBy);
+    const entry = new ViewerLevel(level.id, level.name, oldEntry.submittedBy);
+    for (const key of Object.keys(oldEntry).filter(k => !(k in entry))) {
+      entry[key] = oldEntry[key];
+    }
+    this.queue[0] = entry;
     this.sendAsync( this._playLevel() );
 
     overlay.sendLevels(this.queue);
