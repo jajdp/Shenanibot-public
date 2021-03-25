@@ -1,5 +1,6 @@
 const Rumpus = require("@bscotch/rumpus-ce");
 const { ViewerLevel, Creator } = require("./lib/queueEntry");
+const { ProfileCache } = require("./lib/profileCache");
 const overlay = require("../web/overlay");
 const creatorCodeUi = require("../web/creatorCodeUi");
 const { rewardHelper } = require("../config/loader");
@@ -9,6 +10,7 @@ class ShenaniBot {
   constructor(botOptions, sendAsync = _ => {}) {
     this.sendAsync = sendAsync;
     this.rce = new Rumpus.RumpusCE(botOptions.auth.delegationToken);
+    this.profileCache = new ProfileCache();
     this.options = botOptions.config;
     this.streamer = botOptions.auth.streamer;
     this.queue = [];
@@ -655,6 +657,7 @@ class ShenaniBot {
     if (this.queue[0]) {
       if (this.queue[0].type === "level") {
         this.rce.levelhead.bookmarks.add(this.queue[0].id);
+        this.profileCache.updateLevel({id: this.queue[0].id, played: true});
         return `Now playing ${this.queue[0].display} submitted by ${this.queue[0].submittedBy}`;
       }
       if (this.queue[0].type === "creator") {
@@ -727,6 +730,12 @@ class ShenaniBot {
   }
 
   async _getLevelsForCreator(creatorId, levelsCb) {
+    const cachedLevels = this.profileCache.getLevelsForCreator(creatorId);
+    if (cachedLevels) {
+      levelsCb(cachedLevels);
+      return;
+    }
+
     const maxLevels = 128;
     let gotMaxLevels;
     let query = {
@@ -738,8 +747,8 @@ class ShenaniBot {
     };
 
     do {
-      let levelInfo = await this.rce.levelhead.levels.search(query);
-      levelsCb(levelInfo.map(li => ({
+      const levelInfo = await this.rce.levelhead.levels.search(query);
+      const loadedLevels = levelInfo.map(li => ({
         ...new ViewerLevel(li.levelId, li.title, ""),
         date: li.createdAt,
         avatar: li.avatarUrl(),
@@ -747,7 +756,9 @@ class ShenaniBot {
         difficulty: li.stats.Players > 10 ? li.stats.Diamonds : null,
         played: !!(li.interactions && li.interactions.played),
         beaten: !!(li.interactions && li.interactions.completed),
-      })));
+      }));
+      this.profileCache.addLevelsForCreator(creatorId, loadedLevels);
+      levelsCb(loadedLevels);
 
       gotMaxLevels = levelInfo.length === maxLevels;
       if (gotMaxLevels) {
