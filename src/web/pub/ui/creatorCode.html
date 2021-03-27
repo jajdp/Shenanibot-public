@@ -55,7 +55,7 @@
         overflow-y: auto;
         position: relative;
       }
-      ::-webkit-scrollbar {
+      #list::-webkit-scrollbar {
         display: none;
       }
       .level {
@@ -70,6 +70,9 @@
         padding: 10px;
         position: relative;
         width: 90%;
+      }
+      .level.filtered-level {
+        display: none;
       }
       .cover {
         background-color: #000000;
@@ -115,6 +118,47 @@
         height: 64px;
         width: 64px;
       }
+      #tabs {
+        margin-top: 10px;
+      }
+      #tabs>div {
+        display: none;
+      }
+      #tabs>div.active-tab {
+        background-color: #cfcfcf;
+        display: block;
+      }
+      #filter-columns {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 10px;
+      }
+      .checked-filter-row {
+        display: flex;
+        align-items: center;
+      }
+      #tag-grid {
+        display: grid;
+        grid: auto-flow / 1fr auto auto auto;
+        height: 300px;
+        justify-items: center;
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
+      .tag-grid-header {
+        background-color: #cfcfcf;
+        height: 100%;
+        padding: 0 5px;
+        position: sticky;
+        top: 0px;
+        width: 100%;
+      }
+      .tag-name {
+        justify-self: end;
+      }
+      #filter-buttons {
+        margin-top: 10px;
+      }
     </style>
   </head>
 
@@ -134,6 +178,129 @@
       </div>
     </div>
 
+    <div>
+      <button onclick="selectTab('filters')" type="button">Filters</button>
+      <button onclick="selectTab('help')" type="button">Help</button>
+      <hr>
+    </div>
+    <div id="tabs">
+      <div id="filters" class="active-tab">
+        <div>
+          Level Name
+          <select id='level-name-filter-type'>
+            <option>contains</option>
+            <option>does not contain</option>
+            <option>starts with</option>
+            <option>does not start with</option>
+            <option>equals</option>
+          </select>
+          <input id='level-name-filter' />
+        </div>
+        <div id="filter-columns">
+          <div id="difficulty-filter">
+            Difficulty to Include:
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-difficulty-1-filter" checked>
+              <img class="level-difficulty" src="/img/difficulty-1.svg">
+            </div>
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-difficulty-2-filter" checked>
+              <img class="level-difficulty" src="/img/difficulty-2.svg">
+            </div>
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-difficulty-3-filter" checked>
+              <img class="level-difficulty" src="/img/difficulty-3.svg">
+            </div>
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-difficulty-4-filter" checked>
+              <img class="level-difficulty" src="/img/difficulty-4.svg">
+            </div>
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-difficulty-5-filter" checked>
+              <img class="level-difficulty" src="/img/difficulty-5.svg">
+            </div>
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-difficulty-6-filter" checked>
+              <img class="level-difficulty" src="/img/difficulty-6.svg">
+            </div>
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-difficulty-unk-filter" checked>
+              Unknown
+            </div>
+          </div>
+          <div>
+            Tag Filters:
+            <div id="tag-grid">
+              <div class="tag-grid-header"></div>
+              <div class="tag-grid-header">Require</div>
+              <div class="tag-grid-header">-</div>
+              <div class="tag-grid-header">Exclude</div>
+            </div>
+          </div>
+          <div>
+            Interactions to Include:
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-unplayed-filter" checked>
+              Unplayed Levels
+            </div>
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-played-filter" checked>
+              Played/Uncleared Levels
+            </div>
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-beaten-filter" checked>
+              Cleared Levels
+            </div>
+          </div>
+        </div>
+        <div id='filter-buttons'>
+          <button onclick="applyFilters()" type="button">Filters On</button>
+          <button onclick="clearFilters()" type="button">Filters Off</button>
+        </div>
+      </div>
+      <div id="help">
+        <p>When a viewer-submitted creator ID reaches the top of the queue, the
+        specified creator's levels will be shown in the above frame.  You can
+        click on the level you've chosen to play; the level will replace the
+        creator ID in the queue and will then be bookmarked just as if the
+        viewer had directly submitted that level.</p>
+
+        <p>The page will work in a stand-alone browser, but it is also designed
+        to work as a browser source in OBS so you can use it as a seamless part
+        of your stream layout.</p>
+        <ul>
+          <li>The source's width should be set to 840.  The height must be at
+              least 640 to show the display frame, but to see all page controls
+              a height of 1280 is recommended.
+          <li>When placing/sizing the browser source, you can hold ALT while
+              resizing the source to selectively capture the area inside the
+              frame.  (There are 10px of padding inside the frame - about the
+              same as the thickness of the frame itself - so you don't need to
+              be super precise.)  Since OBS's default "CSS override" makes the
+              page background transparent, the source will then be invisible
+              until a creator code reaches the top of the queue, at which point
+              the level selection menu will appear with a semi-transparent
+              backgorund.
+          <li>If you right-click on the configured browser source, the menu has
+              an "Interact" option: this brings up a window in which you can
+              see the entire page (regardless of how it's cropped in your
+              layout) and interact with it like a regular browser window.
+          <li><strong>NOTE:</strong> OBS Browser Source interaction seems to
+              have some issues with &lt;select&gt; elements, which are used to
+              set some filtering options. A work-around is to use keyboard
+              controls if you want to set the affected filter options (e.g.
+              when filtering level name, clidk to move focus to the filter type
+              selection, then use the up and down arrows to choose an option).
+              Clicking on the &lt;select&gt; control may cause glitching, which
+              may be visible in the stream view as well.  In that event,
+              disabling OBS Browser Source hardware acceleration seems to
+              prevent the glitching (but the select control still does not
+              respond to mouse interaction correctly).
+          <li>You can edit the CSS override settings to further customize the
+              appearance of the menu.
+      </div>
+    </div>
+
     <script language="javascript" type="text/javascript">
       let ws;
       const model = {
@@ -141,6 +308,43 @@
         name: null,
         levels: []
       };
+      const filters = [];
+
+      const selectTab = tabName => {
+        for (const tab of document.getElementById('tabs').children) {
+          if (tab.id === tabName) {
+            tab.classList.add('active-tab');
+          } else {
+            tab.classList.remove('active-tab');
+          }
+        }
+      };
+
+      const gridEl = document.getElementById('tag-grid');
+      const buildTagFilter = name => {
+        let cell = document.createElement('div');
+        cell.innerHTML = name;
+        cell.classList.add('tag-name');
+        gridEl.appendChild(cell);
+
+        cell = document.createElement('input');
+        cell.type = "radio";
+        cell.name = name;
+        cell.value = "require";
+        gridEl.appendChild(cell);
+
+        cell = document.createElement('input');
+        cell.type = "radio";
+        cell.name = name;
+        cell.checked = true;
+        gridEl.appendChild(cell);
+
+        cell = document.createElement('input');
+        cell.type = "radio";
+        cell.name = name;
+        cell.value = "exclude";
+        gridEl.appendChild(cell);
+      }
 
       const buildLevelEl = level => {
         level.el = document.createElement('div');
@@ -178,7 +382,7 @@
           difficulty.classList.add('level-difficulty');
           difficulty.src = `/img/difficulty-${level.difficulty}.svg`;
           detailsRow.appendChild(difficulty);
-	}
+        }
 
         const tags = document.createElement('span');
         tags.classList.add('level-tags');
@@ -219,32 +423,111 @@
             buildLevelEl(level);
             listEl.appendChild(level.el);
           }
-          level.el.style.order = n;
-          n += 1;
+          if (filters.every(filter => filter(level))) {
+            level.el.classList.remove('filtered-level');
+            level.el.style.order = n;
+            n += 1;
+          } else {
+            level.el.classList.add('filtered-level');
+          }
         }
+      };
+
+      const applyFilters = () => {
+        filters.length = 0;
+        const levelNameFilter = document.getElementById('level-name-filter')
+                                        .value.toLowerCase();
+        if (levelNameFilter) {
+          switch (document.getElementById('level-name-filter-type').value) {
+            case 'contains':
+              filters.push(l => l.name.toLowerCase().includes(levelNameFilter));
+              break;
+            case 'does not contain':
+              filters.push(l => !l.name.toLowerCase()
+                                       .includes(levelNameFilter));
+              break;
+            case 'starts with':
+              filters.push(l => l.name.toLowerCase()
+                                      .startsWith(levelNameFilter));
+              break;
+            case 'ption>does not start with':
+              filters.push(l => !l.name.toLowerCase()
+                                       .startsWith(levelNameFilter));
+              break;
+            case 'equals':
+              filters.push(l => l.name.toLowerCase() !== levelNameFilter);
+              break;
+          }
+        }
+        for (let i = 1; i <= 6; i++) {
+          if (!document.getElementById(`level-difficulty-${i}-filter`)
+                       .checked) {
+            filters.push(l => l.difficulty !== i);
+          }
+        }
+        if (!document.getElementById("level-difficulty-unk-filter").checked) {
+          filters.push(l => l.difficulty);
+        }
+
+        for (const tag of document.querySelectorAll(
+                                          "input[value='require']:checked")) {
+          filters.push(l => l.tags.includes(tag.name));
+        }
+        for (const tag of document.querySelectorAll(
+                                          "input[value='exclude']:checked")) {
+          filters.push(l => !l.tags.includes(tag.name));
+        }
+
+        if (!document.getElementById("level-unplayed-filter").checked) {
+          filters.push(l => l.played);
+        }
+        if (!document.getElementById("level-played-filter").checked) {
+          filters.push(l => l.beaten || !l.played);
+        }
+        if (!document.getElementById("level-beaten-filter").checked) {
+          filters.push(l => !l.beaten);
+        }
+
+        updateView(false);
+      };
+
+      const clearFilters = () => {
+        filters.length = 0;
+        updateView(false);
       };
 
       const choose = level => {
         ws.send(JSON.stringify({creatorId: model.creatorId, level}));
       };
 
-      (() => {
-        ws = new WebSocket(`ws://${window.location.host}/ui/creatorCode`);
-        ws.onmessage = m => {
-          const data = JSON.parse(m.data);
-          switch (data.type) {
-            case "info":
-              model.creatorId = data.creatorId;
-              model.name = data.name;
-              model.levels = data.levels;
-              break;
-            case "levels":
-              model.levels = model.levels.concat(data.levels);
-              break;
+      const tagRequest = new XMLHttpRequest();
+      tagRequest.open("GET",
+          "https://www.bscotch.net/api/levelhead/level-tags/counts");
+      tagRequest.send();
+      tagRequest.onreadystatechange = e => {
+        if (tagRequest.readyState === 4 && tagRequest.status === 200) {
+          for (const tagName of JSON.parse(tagRequest.responseText).data
+                                    .map(t => t.name).sort()) {
+            buildTagFilter(tagName);
           }
-          updateView(data.type === "info");
-        };
-      })();
+        }
+      };
+
+      ws = new WebSocket(`ws://${window.location.host}/ui/creatorCode`);
+      ws.onmessage = m => {
+        const data = JSON.parse(m.data);
+        switch (data.type) {
+          case "info":
+            model.creatorId = data.creatorId;
+            model.name = data.name;
+            model.levels = data.levels;
+            break;
+          case "levels":
+            model.levels = model.levels.concat(data.levels);
+            break;
+        }
+        updateView(data.type === "info");
+      };
     </script>
   </body>
 </html>
