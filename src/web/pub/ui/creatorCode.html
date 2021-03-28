@@ -113,6 +113,12 @@
         color: #4fa74f;
         font-size: 20px;
       }
+      .level-players {
+        align-self: start;
+        flex: none;
+        height: 32px;
+        width: 32px;
+      }
       .level-interaction {
         flex: none;
         height: 64px;
@@ -251,6 +257,24 @@
               <input type="checkbox" id="level-beaten-filter" checked>
               Cleared Levels
             </div>
+            <hr>
+            Required # of Players:
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-1p-filter" checked>
+              1 or more
+            </div>
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-2p-filter" checked>
+              2 or more
+            </div>
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-3p-filter" checked>
+              3 or more
+            </div>
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-4p-filter" checked>
+              4 players
+            </div>
           </div>
         </div>
         <div id='filter-buttons'>
@@ -346,6 +370,20 @@
         gridEl.appendChild(cell);
       }
 
+      const playersIconSrc = level => {
+        const avatarUrl = id =>
+                     `https://img.bscotch.net/fit-in/64x64/avatars/${id}.png`;
+        switch (level.players) {
+          case 2:
+            return avatarUrl('two-players');
+          case 3:
+            return avatarUrl('three-players');
+          case 4:
+            return avatarUrl('four-players');
+        }
+        return null;
+      }
+
       const buildLevelEl = level => {
         level.el = document.createElement('div');
         level.el.classList.add("level");
@@ -388,6 +426,14 @@
         tags.classList.add('level-tags');
         tags.innerHTML = level.tags.join(', ');
         detailsRow.appendChild(tags);
+
+        const playersIcon = playersIconSrc(level);
+        if (playersIcon) {
+          const players = document.createElement('img');
+          players.classList.add('level-players');
+          players.src = playersIcon;
+          level.el.appendChild(players);
+        }
 
         const interaction = document.createElement('img');
         interaction.classList.add('level-interaction');
@@ -486,6 +532,11 @@
         }
         if (!document.getElementById("level-beaten-filter").checked) {
           filters.push(l => !l.beaten);
+        }
+        for (let i = 1; i <= 4; i++) {
+          if (!document.getElementById(`level-${i}p-filter`).checked) {
+            filters.push(l => l.players !== i);
+          }
         }
 
         updateView(false);

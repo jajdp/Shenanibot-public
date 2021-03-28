@@ -752,6 +752,7 @@ class ShenaniBot {
         ...new ViewerLevel(li.levelId, li.title, ""),
         date: li.createdAt,
         avatar: li.avatarUrl(),
+        players: li.requiredPlayers,
         tags: li.tagNames,
         difficulty: li.stats.Players > 10 ? li.stats.Diamonds : null,
         played: !!(li.interactions && li.interactions.played),
