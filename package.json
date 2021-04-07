@@ -15,12 +15,15 @@
     "tmi.js": "^1.5.0",
     "ws": "^7.3.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "jasmine": "^3.7.0"
+  },
   "scripts": {
     "start": "node .",
     "configure": "node src/config/index.js",
     "test": "node src/test/test.js",
-    "basictest": "node src/test/basictest.js"
+    "basictest": "node src/test/basictest.js",
+    "unittest": "./node_modules/.bin/jasmine"
   },
   "repository": {
     "type": "git",

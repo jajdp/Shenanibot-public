@@ -4,18 +4,25 @@ const statusUrl = '/overlay/status';
 const levelsUrl = '/overlay/levels';
 
 const state = {
-    prefix: "",
-    acceptCreatorCode: false,
-    levels: "[]",
-    status: ""
+  prefix: "",
+  acceptCreatorCode: false,
+  levels: "[]",
+  status: ""
 };
 
 const setStatus = open => {
-    state.status = (JSON.stringify({
-        status: open ? "open" : "closed",
-        command: `${state.prefix}add`,
-        acceptCreatorCode: state.acceptCreatorCode
-    }));
+  state.status = (JSON.stringify({
+    status: open ? "open" : "closed",
+    command: `${state.prefix}add`,
+    acceptCreatorCode: state.acceptCreatorCode
+  }));
+};
+
+const setLevels = queue => {
+  state.levels = JSON.stringify(queue.map(e => ({
+    type: e ? e.type : "mark",
+    entry: e || undefined
+  })));
 };
 
 module.exports = {
@@ -24,6 +31,7 @@ module.exports = {
     state.prefix = config.prefix;
     state.acceptCreatorCode = config.creatorCodeMode !== 'reject';
     setStatus(true);
+    setLevels([]);
 
     console.log(`Go to http://localhost:${config.httpPort}/overlay/ for overlay setup instructions`);
 
@@ -41,10 +49,7 @@ module.exports = {
   },
 
   sendLevels: queue => {
-    state.levels = JSON.stringify(queue.map(e => ({
-      type: e ? e.type : "mark",
-      entry: e || undefined
-    })));
+    setLevels(queue);
     httpServer.broadcast(levelsUrl, state.levels);
   }
 };

@@ -1,10 +1,12 @@
 const Rumpus = require("@bscotch/rumpus-ce");
+const clipboard = require("clipboardy");
+
 const { ViewerLevel, Creator } = require("./lib/queueEntry");
 const { ProfileCache } = require("./lib/profileCache");
-const overlay = require("../web/overlay");
-const creatorCodeUi = require("../web/creatorCodeUi");
 const { rewardHelper } = require("../config/loader");
-const clipboard = require("clipboardy");
+const creatorCodeUi = require("../web/creatorCodeUi");
+const overlay = require("../web/overlay");
+const httpServer = require('../web/server');
 
 class ShenaniBot {
   constructor(botOptions, sendAsync = _ => {}) {
@@ -17,11 +19,17 @@ class ShenaniBot {
     this.queueOpen = true;
     this.users = {};
     this.levels = {};
+    this.onStatus = _ => {};
+    this.onQueue = _ => {};
+
     if (this.options.priority === "rotation") {
       this.currentRound = 1;
     }
     if (this.options.httpPort) {
+      httpServer.start(this.options);
       overlay.init();
+      this.onStatus = isOpen => overlay.sendStatus(isOpen);
+      this.onQueue = () => overlay.sendLevels(this.queue);
       if (this.options.creatorCodeMode === "webui") {
         creatorCodeUi.init((c, l) => this._specifyLevelForCreator(c, l));
       }
@@ -105,13 +113,13 @@ class ShenaniBot {
 
   openQueue() {
     this.queueOpen = true;
-    overlay.sendStatus(true);
+    this.onStatus(true);
     return "The queue has been opened, add some levels to it!";
   }
 
   closeQueue() {
     this.queueOpen = false;
-    overlay.sendStatus(false);
+    this.onStatus(false);
     return "The queue has been closed! No more levels :(";
   }
 
@@ -147,7 +155,7 @@ class ShenaniBot {
       response = this._playLevel();
     }
 
-    overlay.sendLevels(this.queue);
+    this.onQueue();
     return response;
   }
 
@@ -163,6 +171,7 @@ class ShenaniBot {
       for (let i = start; stop(i); i += increment) {
         if (this.queue[i] && this.queue[i].submittedBy === match[2]) {
           index = i;
+          break;
         }
       }
       if (!index) {
@@ -196,7 +205,7 @@ class ShenaniBot {
     let response = `Pulled ${this.queue[0].display} to the front of the queue...`;
     response += this._playLevel();
 
-    overlay.sendLevels(this.queue);
+    this.onQueue();
     return response;
   }
 
@@ -226,7 +235,7 @@ class ShenaniBot {
       response = (response || "") + this._playLevel();
     }
 
-    overlay.sendLevels(this.queue);
+    this.onQueue();
     return response;
   }
 
@@ -237,7 +246,7 @@ class ShenaniBot {
     }
 
     this.queue.push(null);
-    overlay.sendLevels(this.queue);
+    this.onQueue();
     return "A marker has been added to the queue.";
   }
 
@@ -336,7 +345,8 @@ class ShenaniBot {
       return "Sorry, queue is closed!";
     }
 
-    if (this.twitch.usePointsToAdd && !rewardType) {
+    if (this.twitch.usePointsToAdd && !rewardType
+                                   && username !== this.streamer) {
       return "Please use channel points to add levels.";
     }
 
@@ -388,7 +398,7 @@ class ShenaniBot {
     }
 
     const pos = this._enqueue(entry, user);
-    overlay.sendLevels(this.queue);
+    this.onQueue();
 
     user.levelsSubmitted++;
     user.permit = (username === this.streamer);
@@ -428,7 +438,7 @@ class ShenaniBot {
     }
 
     this._removeFromQueue(i);
-    overlay.sendLevels(this.queue);
+    this.onQueue();
     if (entry.type === "level") {
       this.levels[id] = (username === this.streamer) ? `was removed by ${username}; it can't be re-added` : null;
     }
@@ -506,22 +516,35 @@ class ShenaniBot {
   }
 
   _processUrgentReward(id, onSuccess = () => null) {
-    const { entry, response } = this._getQueueEntryForReward(id);
+    const { entry, index, response } = this._getQueueEntryForReward(id);
     if (!entry) {
       return response;
     }
-    entry.priority = true;
+    const actions = []
+    if (!entry.priority) {
+      actions.push('was marked as priority!');
+      entry.priority = true;
+    }
     let newIndex = this.queue.findIndex( (e, i) => i && (!e || !e.priority) );
     if (newIndex === -1) {
       newIndex = this.queue.length;
     }
-    if (this.options.priority === "rotation") {
-      const prevEntry = this.queue[newIndex - 1];
-      entry.round = prevEntry ? prevEntry.round : this.currentRound;
+    if (newIndex >= index) {
+      newIndex = index;
+    } else {
+      actions.push(`is now #${newIndex + 1} in the queue.`);
+      if (this.options.priority === "rotation") {
+        const prevEntry = this.queue[newIndex - 1];
+        entry.round = prevEntry ? prevEntry.round : this.currentRound;
+      }
+    }
+    if (actions.length === 0) {
+      actions.push("can't be given any higher priority!");
     }
     this.queue.splice(newIndex, 0, entry);
+    this.onQueue();
     onSuccess();
-    return `${entry.display} was marked as priority! It is now #${newIndex + 1} in the queue.`;
+    return `${entry.display} ${actions.join(" It ")}`;
   }
 
   _processPriorityReward(id) {
@@ -538,6 +561,7 @@ class ShenaniBot {
     }
     const newIndex = i + 1;
     this.queue.splice(newIndex, 0, entry);
+    this.onQueue();
     return `${entry.display} was marked as priority! It is now #${newIndex + 1} in the queue.`;
   }
 
@@ -552,7 +576,7 @@ class ShenaniBot {
     } else if (!this.queue[index - 1]) {
       response = "You can't expedite a level that's right after a break in the queue.";
     } else if (this.queue[index - 1].round < entry.round) {
-      repsonse = "You can't expedite a level that's already the first to be played in its round.";
+      response = "You can't expedite a level that's already the first to be played in its round.";
     } else if (this.queue[index - 1].priority && !entry.priority) {
       response = "You can't expedite a normal-priority level that's right after a high-priority level.";
     } else {
@@ -561,6 +585,7 @@ class ShenaniBot {
     }
 
     this.queue.splice(index, 0, entry);
+    this.onQueue();
     return response;
   }
 
@@ -706,7 +731,7 @@ class ShenaniBot {
       const username = entry.submittedBy;
       const user = this._getUser(username);
 
-      if (this.options.levelLimitType === "active") {
+      if (this.options.levelLimitType === "active" || index) {
         user.levelsSubmitted--;
       }
 
@@ -783,7 +808,7 @@ class ShenaniBot {
     this.queue[0] = entry;
     this.sendAsync( this._playLevel() );
 
-    overlay.sendLevels(this.queue);
+    this.onQueue();
     return true;
   }
 

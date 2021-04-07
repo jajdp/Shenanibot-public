@@ -9,10 +9,11 @@ const endpoints = {};
 
 module.exports = {
   start: config => {
+    botConfig = config;
+
     if (wsServer) {
       return;
     }
-    botConfig = config;
 
     const app = express();
     app.use(express.static(path.join(__dirname, "pub")));
@@ -55,6 +56,21 @@ module.exports = {
   broadcast: (url, message) => {
     for (const ws of endpoints[url].clients) {
       ws.send(message);
+    }
+  },
+
+  // This can be used to prepare the server to be attached to a new bot
+  // instance.  Currently this is only important during unit testing.  Note
+  // for efficiency we don't clear the ws server; it shouldn't matter and
+  // would cost a lot of time in test runs if we reset it each time.
+  reset: async config => {
+    botConfig = null;
+    for (const url of Object.keys(endpoints)) {
+      while (endpoints[url].clients.length) {
+        endpoints[url].clients[0].close();
+        await new Promise(r => endpoints[url].clients[0].on('close', r));
+      }
+      delete endpoints[url];
     }
   }
 };

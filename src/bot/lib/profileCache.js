@@ -1,7 +1,11 @@
 const levels = {};
-const creators = {};
+let creators = {};
 
 class ProfileCache {
+  constructor() {
+    this.invalidate();
+  }
+
   addLevelsForCreator(creatorId, newLevels) {
     creators[creatorId] = creators[creatorId] || new Set();
     for (const level of newLevels) {
@@ -11,6 +15,14 @@ class ProfileCache {
         creators: creators[creatorId],
         level
       };
+    }
+  }
+
+  invalidate(creatorId) {
+    if (creatorId) {
+      delete creators[creatorId];
+    } else {
+      creators = {};
     }
   }
 

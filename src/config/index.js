@@ -316,7 +316,7 @@ const questions = {
               a.config.config.creatorCodeMode = 'manual';
               console.log( '\n\t!!! WARNING !!!\n'
                          + '\tCreator Code Mode was changed to \'Show the creator code in\n'
-		         + '\tchat but take no further action\' because the UI is not\n'
+                         + '\tchat but take no further action\' because the UI is not\n'
                          + '\tsupported when the web server is disabled.');
             }
             return false;

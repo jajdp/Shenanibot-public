@@ -1,7 +1,7 @@
-const TMI = require('tmi.js');
-const ShenaniBot = require('../../bot/index');
 const pb = require('@madelsberger/pausebuffer');
-const httpServer = require('../../web/server');
+const TMI = require('tmi.js');
+
+const ShenaniBot = require('../../bot/index');
 const configLoader = require('../../config/loader');
 
 const params = configLoader.load();
@@ -9,10 +9,6 @@ const params = configLoader.load();
 process.on('SIGINT', function() {
   process.exit(1);
 });
-
-if (params.config.httpPort) {
-  httpServer.start(params.config);
-}
 
 const options = {
   options: {
