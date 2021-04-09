@@ -93,13 +93,13 @@ The bot needs a token with the following permissions:
 - View, and, and delete own Levelhead level bookmarks
 
 ### Queue Management Options
-Here you can decide whether levels are taken into the queue in the order received, or whether viewers "take turns" in a rotation. You can also configure limits on how many levels each viewer may submit.
+Here you can decide whether levels are taken into the queue in the order received, or whether viewers "take turns" in a rotation; configure limits on how many levels each viewer may submit; and determine how to handle creator codes.
 
 ### Chat Options
 Options that control the bot's interaction with chat are found here. You can change the prefix used to recognize bot cmmands. (By default this is !, and it is recommended to use this if possible.) You can also enable or disable message throttling.
 
-### Overlay Options
-You can enable or diable the overlay server, which allows you to include information about the queue in your stream layout (provided your streaming software can be set up to display a web view, such as with OBS Browser Sources).
+### Web Server Options
+You can enable or diable the embedded web server. This allows you to use overlays to include information about the queue in your stream layout (provided your streaming software can be set up to display a web view, such as with OBS Browser Sources) and can be used to provide an interactive UI for choosing levels for submitted creator codes.
 
 Once you've configured this feature, the bot will provide a URL with setup instructions at start-up. (Most of the overlay setup is done in your streaming software.)
 

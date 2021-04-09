@@ -4,6 +4,7 @@ const Rx = require("rxjs");
 const configLoader = require("./loader");
 
 let initialConfig = configLoader.load();
+const answers = { config: fp.cloneDeep(initialConfig) };
 
 function buildMenuQuestion(menuName, q) {
   const aPath = `menu.${menuName}`;
@@ -86,8 +87,8 @@ const questions = {
         name: 'Chat Options',
         value: {q: 'chatConfig'}
       }, {
-        name: 'Overlay Options',
-        value: {q: 'overlayConfig'}
+        name: 'Web Server Options',
+        value: {q: 'webServerConfig'}
       },
       new inquirer.Separator(), {
         name: 'Save',
@@ -156,7 +157,7 @@ const questions = {
   rumpusAuth: [
     buildConfigQuestion(
       'auth.delegationToken', {
-       message: "Rumpus Delegation Token:"
+        message: "Rumpus Delegation Token:"
       },
         'The bot needs a delegation key to interact with LevelHead online services\n'
       + 'through the Rumpus API (e.g. to bookmark queued levels so you won\'t have\n'
@@ -228,6 +229,32 @@ const questions = {
         filter: i => typeof i === 'string' && i.match(/^\s*[1-9]\d*\s*$/) ? parseInt(i) : i,
         validate: i => (typeof i !== 'number') ? 'Please enter a number of levels' : true
       }
+    ),
+    buildConfigQuestion(
+      'config.creatorCodeMode', {
+        type: 'list',
+        message: 'Creator Code Mode:',
+        choices: a => [{
+          name: 'Present a level selection UI',
+          disabled: a.config.config.httpPort
+                        ? false : 'Web Server must be enabled',
+          value: 'webui'
+        }, {
+          name: 'Copy the creator code to the clipboard',
+          value: 'clipboard'
+        }, {
+          name: 'Show the creator code in chat but take no further action',
+          value: 'manual'
+        }, {
+          name: 'Do not allow creator codes to be submitted',
+          value: 'reject'
+        }]
+      },
+        'You can allow viewers to submit creator codes if they don\'t have a specific\n'
+      + 'level they want to submit. The Creator Code Mode determines whether or not\n'
+      + 'creator codes are accepted into the queue and, if so, how the bot behaves\n'
+      + 'when a creator code reaches the top of the queue (since unlike level codes\n'
+      + 'they cannot simply be bookmarked).'
     )
   ],
 
@@ -264,31 +291,40 @@ const questions = {
     ),
   ],
 
-  overlayConfig: [
+  webServerConfig: [
     buildConfigQuestion(
-      'useOverlay', {
+      'useWebServer', {
         type: 'confirm',
-        name: 'useOverlay', // this is not stored in the config file
-        message: 'Enable overlays?',
-        default: a => fp.get('config.config.overlayPort', a) ? true : false,
+        name: 'useWebServer', // this is not stored in the config file
+        message: 'Enable web server?',
+        default: a => fp.get('config.config.httpPort', a) ? true : false,
         askAnswered: true
       },
-        'Overlays allow you to display info about the queue on-screen in your stream.\n'
-      + 'The bot serves "overlay views" as web pages; so for example you can load\n'
-      + 'them in OBS browser sources and then apply custom CSS to adjust their\n'
-      + 'appearance for your stream layout.'
+        'Enabling the web server allows you to serve overlays. Overlays allow you to\n'
+      + 'display info about the queue on-screen in your stream (e.g. by loading them\n'
+      + 'in OBS browser sources and applying custom CSS to adjust their appearance\n'
+      + 'for your stream layout).\n'
+      + 'The web server can also provide a UI for choosing a level when a viewer\n'
+      + 'submits a creator code.'
     ),
     buildConfigQuestion(
-      'config.overlayPort', {
+      'config.httpPort', {
         when: a => {
-          if (!a.useOverlay) {
-            delete a.config.config.overlayPort;
+          if (!a.useWebServer) {
+            delete a.config.config.httpPort;
+            if (a.config.config.creatorCodeMode === 'webui') {
+              a.config.config.creatorCodeMode = 'manual';
+              console.log( '\n\t!!! WARNING !!!\n'
+                         + '\tCreator Code Mode was changed to \'Show the creator code in\n'
+                         + '\tchat but take no further action\' because the UI is not\n'
+                         + '\tsupported when the web server is disabled.');
+            }
             return false;
           }
           return true;
         },
-        message: 'Overlay port:',
-        default: a => fp.get('config.config.overlayPort', a) || 8080,
+        message: 'Web Server Port:',
+        default: a => fp.get('config.config.httpPort', a) || 8080,
         // type: 'number' acts up when validation fails, so use this instead
         filter: i => {
           if (typeof i === 'string' && i.match(/^\s*[1-9]\d*\s*$/)) {
@@ -300,13 +336,10 @@ const questions = {
           return i;
         },
         validate: i => (typeof i !== 'number') ? 'Please enter a valid port number (1 - 65535)' : true
-      },
-        'The bot uses an embedded web server to serve overlay views. It needs an\n'
-      + 'unused TCP port for the web server.'
+      }, 'The web server requires an unused TCP port.'
     )
   ]
 };
-const answers = { config: fp.cloneDeep(initialConfig) };
 
 const prompts = new Rx.Subject();
 inquirer.prompt(prompts, answers).ui.process.subscribe(
