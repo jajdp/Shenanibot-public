@@ -145,7 +145,7 @@ You can use `!noreward` to remove the association of a behavior from a reward.  
 
 ### Behaviors
 
-`urgent` - Mark a level as "high priority" and move it to the front of the queue subject to the following rules:  The "now playing" level is not affected.  If there are other "high priority" levels at the front of the queue, the level is added after them.  The level must already be in the queue.
+`urgent` - Mark a level as "high priority" and move it to the front of the queue subject to the following rules:  The "now playing" level is not affected.  If there are other "high priority" levels at the front of the queue, the level is added after them (unless they're in a later round when using "rotation" priority).  The level must already be in the queue.
 
 If `PRIORITY` is set to "rotation", the level's round assignment may change to be consistent with its new location in the queue.  However, for purposes of deciding what round the viewer's next submission would be added to, the level is still considered to occupy their spot in the round to which it was originally assigned.
 

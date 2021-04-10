@@ -79,4 +79,50 @@ describe("the !add command", () => {
       }
     }]);
   });
+
+  it("closes prior rounds if the new entry is in the 'now playing' position",
+     async function() {
+    const bot = this.buildBotInstance({config: {
+      httpPort: 8080,
+      priority: "rotation"
+    }});
+
+    await bot.command("!add valid01", "viewer0");
+    await bot.command("!next", "streamer");
+    await bot.command("!add valid02", "viewer0");
+    await bot.command("!add valid03", "viewer1");
+
+    const queue = await this.getQueue();
+    expect(queue.map(e => ({id: e.entry.id, round: e.entry.round}))).toEqual([
+      {id: "valid02", round: 2},
+      {id: "valid03", round: 2}
+    ]);
+  });
+
+  it("clears the previous round's timer if the new entry is 'now playing'",
+     async function() {
+    const bot = this.buildBotInstance({config: {
+      httpPort: 8080,
+      priority: "rotation",
+      roundDuration: 1
+    }});
+    jasmine.clock().install();
+
+    await bot.command("!add valid01", "viewer0");
+    jasmine.clock().tick(59999);
+    await bot.command("!next", "streamer");
+    await bot.command("!add valid02", "viewer0");
+    jasmine.clock().tick(1);
+    await bot.command("!add valid03", "viewer1");
+    jasmine.clock().tick(60000);
+    await bot.command("!add valid04", "viewer2");
+
+    const queue = await this.getQueue();
+    expect(queue.map(e => ({id: e.entry.id, round: e.entry.round}))).toEqual([
+      {id: "valid02", round: 2},
+      {id: "valid03", round: 2},
+      {id: "valid04", round: 3}
+    ]);
+    jasmine.clock().uninstall();
+  });
 });

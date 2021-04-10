@@ -78,12 +78,44 @@ module.exports = async (cb, nextPosition = 2, nextRequired = false,
       if (updateCurrentRound) {
         await bot.command("!add 001l001", "newviewer");
         const queue = await this.getQueue();
-        expect(queue[queue.length - 1].entry.round).toEqual(2);
+        expect(queue.find(e => e.entry.id === "001l001").entry.round)
+          .toEqual(2);
       } else {
         const queue = await this.getQueue();
         expect(queue[0].entry.round).toEqual(1);
       }
     });
+
+    if(updateCurrentRound) {
+      it("clears the previous round's timer", async function() {
+        const bot = this.buildBotInstance({
+          config: {
+            creatorCodeMode: "webui",
+            httpPort: 8080,
+            priority: "rotation",
+            roundDuration: 1
+          }
+        });
+        jasmine.clock().install();
+
+        await buildQueue(bot, true);
+
+        jasmine.clock().tick(59999);
+        await cb(bot, "viewer0");
+        jasmine.clock().tick(1);
+        await bot.command("!add 001l001", "newviewer");
+        jasmine.clock().tick(60000);
+        await bot.command("!add 002l001", "newviewer2");
+
+        const queue = await this.getQueue();
+        expect(queue.find(e => e.entry.id === "001l001").entry.round)
+          .toEqual(2);
+        expect(queue.find(e => e.entry.id === "002l001").entry.round)
+          .toEqual(3);
+
+        jasmine.clock().uninstall();
+      });
+    }
 
     it("clears the creator code UI", async function() {
       const bot = this.buildBotInstance({

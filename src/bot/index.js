@@ -6,7 +6,7 @@ const { ProfileCache } = require("./lib/profileCache");
 const { rewardHelper } = require("../config/loader");
 const creatorCodeUi = require("../web/creatorCodeUi");
 const overlay = require("../web/overlay");
-const httpServer = require('../web/server');
+const httpServer = require("../web/server");
 
 class ShenaniBot {
   constructor(botOptions, sendAsync = _ => {}) {
@@ -23,7 +23,8 @@ class ShenaniBot {
     this.onQueue = _ => {};
 
     if (this.options.priority === "rotation") {
-      this.currentRound = 1;
+      this.playingRound = 1;
+      this.minOpenRound = 1;
     }
     if (this.options.httpPort) {
       httpServer.start(this.options);
@@ -197,7 +198,7 @@ class ShenaniBot {
       const entry = this.queue[index];
       entry.priority = true;
       if (this.options.priority === "rotation") {
-        entry.round = this.currentRound;
+        entry.round = this.playingRound;
       }
       this.queue.splice(index, 1)
       this.queue.unshift(entry);
@@ -221,8 +222,8 @@ class ShenaniBot {
           groupLength = noPriorityIndex;
         }
 
-        if (this.queue[groupLength - 1].round > this.currentRound) {
-          groupLength = this.queue.findIndex(l => l.round > this.currentRound);
+        if (this.queue[groupLength - 1].round > this.playingRound) {
+          groupLength = this.queue.findIndex(l => l.round > this.playingRound);
         }
 
         const index = Math.floor(Math.random() * groupLength);
@@ -522,10 +523,15 @@ class ShenaniBot {
     }
     const actions = []
     if (!entry.priority) {
-      actions.push('was marked as priority!');
+      actions.push("was marked as priority!");
       entry.priority = true;
     }
-    let newIndex = this.queue.findIndex( (e, i) => i && (!e || !e.priority) );
+    if (this.options.priority === "rotation") {
+      entry.round = this.playingRound;
+    }
+    let newIndex = this.queue.findIndex(
+        (e, i) => i && (!e || !e.priority || e.round > this.playingRound)
+    );
     if (newIndex === -1) {
       newIndex = this.queue.length;
     }
@@ -533,10 +539,6 @@ class ShenaniBot {
       newIndex = index;
     } else {
       actions.push(`is now #${newIndex + 1} in the queue.`);
-      if (this.options.priority === "rotation") {
-        const prevEntry = this.queue[newIndex - 1];
-        entry.round = prevEntry ? prevEntry.round : this.currentRound;
-      }
     }
     if (actions.length === 0) {
       actions.push("can't be given any higher priority!");
@@ -621,21 +623,45 @@ class ShenaniBot {
     return this.users[username];
   }
 
+  _setRoundTimer() {
+    this.roundTimer = setTimeout(() => {
+      this.minOpenRound += 1;
+      if (this.queue.find(e => e && e.round >= this.minOpenRound)) {
+        this._setRoundTimer();
+      } else {
+        this.roundTimer = null;
+      }
+    },
+    this.options.roundDuration * 60000);
+  }
+
+  _updatePlayingRound(round) {
+    this.playingRound = round;
+    if (round > this.minOpenRound) {
+      this.minOpenRound = round;
+      clearTimeout(this.roundTimer);
+      this._setRoundTimer();
+    }
+  }
+
   _enqueue(entry, user) {
     let laterEntries = [];
     if (this.options.priority === "rotation") {
-      entry.round = Math.max((user.lastRound || 0) + 1, this.currentRound);
+      entry.round = Math.max((user.lastRound || 0) + 1, this.minOpenRound);
       user.lastRound = entry.round;
       const n = this.queue.findIndex(e => e && e.round > entry.round);
       if (n > -1) {
         laterEntries = this.queue.splice(n);
+      }
+      if (this.options.roundDuration && !this.roundTimer) {
+        this._setRoundTimer();
       }
     }
 
     this.queue.push(entry);
     const pos = this.queue.length;
     if (pos === 1 && this.options.priority === "rotation") {
-      this.currentRound = entry.round;
+      this._updatePlayingRound(entry.round);
     }
 
     while (laterEntries.length) {
@@ -669,7 +695,7 @@ class ShenaniBot {
     this._removeFromQueue(0);
 
     if (this.options.priority === "rotation" && this.queue[0]) {
-      this.currentRound = this.queue[0].round;
+      this._updatePlayingRound(this.queue[0].round);
     }
 
     return {
