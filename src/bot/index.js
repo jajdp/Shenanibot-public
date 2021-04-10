@@ -53,9 +53,9 @@ class ShenaniBot {
   }
 
   async command(message, username, rewardId) {
-    const args = message.split(" ");
+    const args = message.split(/\s+/);
     const command = args[0].startsWith(this.options.prefix)
-                  ? args[0].substring(this.options.prefix.length)
+                  ? args[0].substring(this.options.prefix.length).toLowerCase()
                   : undefined;
     if (! (command || rewardId)) {
       return "";
