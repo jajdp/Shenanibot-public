@@ -1,0 +1,584 @@
+<html>
+  <head>
+    <style type="text/css">
+      #display-area {
+        border: 10px #ffffff ridge;
+        display: inline-block;
+        margin-bottom: 10px;
+      }
+      #content-container {
+        opacity: 0;
+        position: relative;
+        transition-property: opacity;
+        transition-duration: 2s;
+      }
+      #content-container.active {
+        opacity: 1;
+      }
+      #background {
+        background-color: #2f0000;
+        border-radius: 20px;
+        height: 600px;
+        opacity: 0.9;
+        padding: 10px;
+        position: relative;
+        width: 800px;
+        z-index: 0;
+      }
+      #content {
+        display: flex;
+        flex-direction: column;
+        height: 600px;
+        overflow: hidden;
+        padding: 10px;
+        position: absolute;
+        top: 0;
+        width: 800px;
+        z-index: 1;
+      }
+      #header {
+        color: #ffffff;
+        flex: none;
+        font-size: 36px;
+        padding: 5px;
+        margin-bottom: 5px;
+      }
+      .creator-id {
+        color: #cfcfcf;
+        font-size: 27px;
+      }
+      #list {
+        align-items: center;
+        display: flex;
+        flex: auto;
+        flex-direction: column;
+        overflow-y: auto;
+        position: relative;
+      }
+      #list::-webkit-scrollbar {
+        display: none;
+      }
+      .level {
+        align-items: center;
+        background-color: #2f2f7f;
+        border-radius: 10px;
+        color: #7fff7f;
+        display: flex;
+        flex: none;
+        font-size: 32px;
+        margin: 5px;
+        padding: 10px;
+        position: relative;
+        width: 90%;
+      }
+      .level.filtered-level {
+        display: none;
+      }
+      .cover {
+        background-color: #000000;
+        border-radius: 10px;
+        height: 100%;
+        left: 6px;
+        opacity: .5;
+        position: absolute;
+        top: 3px;
+        width: 100%;
+      }
+      .cover:hover {
+        opacity: 0;
+      }
+      .level-avatar {
+        flex: none;
+        height: 64px;
+        margin-right: 5px;
+        width: 64px;
+      }
+      .level-text-column {
+        flex: auto;
+      }
+      .level-id {
+        color: #5fcf5f;
+        font-size: 24px;
+      }
+      .level-details-row {
+        display: flex;
+      }
+      .level-difficulty {
+        height: 32px;
+        margin-right: 10px;
+        width: 100px;
+      }
+      .level-tags {
+        align-self: center;
+        color: #4fa74f;
+        font-size: 20px;
+      }
+      .level-players {
+        align-self: start;
+        flex: none;
+        height: 32px;
+        width: 32px;
+      }
+      .level-interaction {
+        flex: none;
+        height: 64px;
+        width: 64px;
+      }
+      #tabs {
+        margin-top: 10px;
+      }
+      #tabs>div {
+        display: none;
+      }
+      #tabs>div.active-tab {
+        background-color: #cfcfcf;
+        display: block;
+      }
+      #filter-columns {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 10px;
+      }
+      .checked-filter-row {
+        display: flex;
+        align-items: center;
+      }
+      #tag-grid {
+        display: grid;
+        grid: auto-flow / 1fr auto auto auto;
+        height: 300px;
+        justify-items: center;
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
+      .tag-grid-header {
+        background-color: #cfcfcf;
+        height: 100%;
+        padding: 0 5px;
+        position: sticky;
+        top: 0px;
+        width: 100%;
+      }
+      .tag-name {
+        justify-self: end;
+      }
+      #filter-buttons {
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="display-area">
+      <div id="content-container">
+        <div id="background"></div>
+        <div id="content">
+          <div id="header">
+            <span id="name"></span>'s Profile
+            <span class="creator-id">
+              (@<span id="creator-id"></span>)
+            </span>
+          </div>
+          <div id="list"></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <button onclick="selectTab('filters')" type="button">Filters</button>
+      <button onclick="selectTab('help')" type="button">Help</button>
+      <hr>
+    </div>
+    <div id="tabs">
+      <div id="filters" class="active-tab">
+        <div>
+          Level Name
+          <select id='level-name-filter-type'>
+            <option>contains</option>
+            <option>does not contain</option>
+            <option>starts with</option>
+            <option>does not start with</option>
+            <option>equals</option>
+          </select>
+          <input id='level-name-filter' />
+        </div>
+        <div id="filter-columns">
+          <div id="difficulty-filter">
+            Difficulty to Include:
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-difficulty-1-filter" checked>
+              <img class="level-difficulty" src="/img/difficulty-1.svg">
+            </div>
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-difficulty-2-filter" checked>
+              <img class="level-difficulty" src="/img/difficulty-2.svg">
+            </div>
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-difficulty-3-filter" checked>
+              <img class="level-difficulty" src="/img/difficulty-3.svg">
+            </div>
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-difficulty-4-filter" checked>
+              <img class="level-difficulty" src="/img/difficulty-4.svg">
+            </div>
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-difficulty-5-filter" checked>
+              <img class="level-difficulty" src="/img/difficulty-5.svg">
+            </div>
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-difficulty-6-filter" checked>
+              <img class="level-difficulty" src="/img/difficulty-6.svg">
+            </div>
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-difficulty-unk-filter" checked>
+              Unknown
+            </div>
+          </div>
+          <div>
+            Tag Filters:
+            <div id="tag-grid">
+              <div class="tag-grid-header"></div>
+              <div class="tag-grid-header">Require</div>
+              <div class="tag-grid-header">-</div>
+              <div class="tag-grid-header">Exclude</div>
+            </div>
+          </div>
+          <div>
+            Interactions to Include:
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-unplayed-filter" checked>
+              Unplayed Levels
+            </div>
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-played-filter" checked>
+              Played/Uncleared Levels
+            </div>
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-beaten-filter" checked>
+              Cleared Levels
+            </div>
+            <hr>
+            Required # of Players:
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-1p-filter" checked>
+              1 or more
+            </div>
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-2p-filter" checked>
+              2 or more
+            </div>
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-3p-filter" checked>
+              3 or more
+            </div>
+            <div class="checked-filter-row">
+              <input type="checkbox" id="level-4p-filter" checked>
+              4 players
+            </div>
+          </div>
+        </div>
+        <div id='filter-buttons'>
+          <button onclick="applyFilters()" type="button">Filters On</button>
+          <button onclick="clearFilters()" type="button">Filters Off</button>
+        </div>
+      </div>
+      <div id="help">
+        <p>When a viewer-submitted creator ID reaches the top of the queue, the
+        specified creator's levels will be shown in the above frame.  You can
+        click on the level you've chosen to play; the level will replace the
+        creator ID in the queue and will then be bookmarked just as if the
+        viewer had directly submitted that level.</p>
+
+        <p>The page will work in a stand-alone browser, but it is also designed
+        to work as a browser source in OBS so you can use it as a seamless part
+        of your stream layout.</p>
+        <ul>
+          <li>The source's width should be set to 840.  The height must be at
+              least 640 to show the display frame, but to see all page controls
+              a height of 1280 is recommended.
+          <li>When placing/sizing the browser source, you can hold ALT while
+              resizing the source to selectively capture the area inside the
+              frame.  (There are 10px of padding inside the frame - about the
+              same as the thickness of the frame itself - so you don't need to
+              be super precise.)  Since OBS's default "CSS override" makes the
+              page background transparent, the source will then be invisible
+              until a creator code reaches the top of the queue, at which point
+              the level selection menu will appear with a semi-transparent
+              backgorund.
+          <li>If you right-click on the configured browser source, the menu has
+              an "Interact" option: this brings up a window in which you can
+              see the entire page (regardless of how it's cropped in your
+              layout) and interact with it like a regular browser window.
+          <li><strong>NOTE:</strong> OBS Browser Source interaction seems to
+              have some issues with &lt;select&gt; elements, which are used to
+              set some filtering options. A work-around is to use keyboard
+              controls if you want to set the affected filter options (e.g.
+              when filtering level name, clidk to move focus to the filter type
+              selection, then use the up and down arrows to choose an option).
+              Clicking on the &lt;select&gt; control may cause glitching, which
+              may be visible in the stream view as well.  In that event,
+              disabling OBS Browser Source hardware acceleration seems to
+              prevent the glitching (but the select control still does not
+              respond to mouse interaction correctly).
+          <li>You can edit the CSS override settings to further customize the
+              appearance of the menu.
+      </div>
+    </div>
+
+    <script language="javascript" type="text/javascript">
+      let ws;
+      const model = {
+        creatorId: null,
+        name: null,
+        levels: []
+      };
+      const filters = [];
+
+      const selectTab = tabName => {
+        for (const tab of document.getElementById('tabs').children) {
+          if (tab.id === tabName) {
+            tab.classList.add('active-tab');
+          } else {
+            tab.classList.remove('active-tab');
+          }
+        }
+      };
+
+      const gridEl = document.getElementById('tag-grid');
+      const buildTagFilter = name => {
+        let cell = document.createElement('div');
+        cell.innerHTML = name;
+        cell.classList.add('tag-name');
+        gridEl.appendChild(cell);
+
+        cell = document.createElement('input');
+        cell.type = "radio";
+        cell.name = name;
+        cell.value = "require";
+        gridEl.appendChild(cell);
+
+        cell = document.createElement('input');
+        cell.type = "radio";
+        cell.name = name;
+        cell.checked = true;
+        gridEl.appendChild(cell);
+
+        cell = document.createElement('input');
+        cell.type = "radio";
+        cell.name = name;
+        cell.value = "exclude";
+        gridEl.appendChild(cell);
+      }
+
+      const playersIconSrc = level => {
+        const avatarUrl = id =>
+                     `https://img.bscotch.net/fit-in/64x64/avatars/${id}.png`;
+        switch (level.players) {
+          case 2:
+            return avatarUrl('two-players');
+          case 3:
+            return avatarUrl('three-players');
+          case 4:
+            return avatarUrl('four-players');
+        }
+        return null;
+      }
+
+      const buildLevelEl = level => {
+        level.el = document.createElement('div');
+        level.el.classList.add("level");
+
+        const avatar = document.createElement('img');
+        avatar.classList.add('level-avatar');
+        avatar.src = level.avatar;
+        level.el.appendChild(avatar);
+
+        const textColumn = document.createElement('div');
+        textColumn.classList.add('level-text-column');
+        level.el.appendChild(textColumn);
+
+        const nameRow = document.createElement('div');
+        nameRow.classList.add('level-name-row');
+        textColumn.appendChild(nameRow);
+
+        const levelName = document.createElement('span');
+        levelName.classList.add('level-name');
+        levelName.innerHTML = level.name;
+        nameRow.appendChild(levelName);
+
+        const levelCode = document.createElement("span");
+        levelCode.classList.add('level-id');
+        levelCode.innerHTML = ` (${level.id})`;
+        nameRow.appendChild(levelCode);
+
+        const detailsRow = document.createElement('div');
+        detailsRow.classList.add('level-details-row');
+        textColumn.appendChild(detailsRow);
+
+        if (level.difficulty) {
+          const difficulty = document.createElement('img');
+          difficulty.classList.add('level-difficulty');
+          difficulty.src = `/img/difficulty-${level.difficulty}.svg`;
+          detailsRow.appendChild(difficulty);
+        }
+
+        const tags = document.createElement('span');
+        tags.classList.add('level-tags');
+        tags.innerHTML = level.tags.join(', ');
+        detailsRow.appendChild(tags);
+
+        const playersIcon = playersIconSrc(level);
+        if (playersIcon) {
+          const players = document.createElement('img');
+          players.classList.add('level-players');
+          players.src = playersIcon;
+          level.el.appendChild(players);
+        }
+
+        const interaction = document.createElement('img');
+        interaction.classList.add('level-interaction');
+        interaction.src = level.beaten ? '/img/beaten.svg'
+                        : level.played ? '/img/played.svg'
+                        : '/img/unplayed.svg';
+        level.el.appendChild(interaction);
+
+        const cover = document.createElement('div');
+        cover.classList.add("cover");
+        cover.onclick = () => choose(level);
+        level.el.appendChild(cover);
+      };
+
+      const updateView = reset => {
+        const contentContainerEl = document.getElementById("content-container");
+        if (!model.creatorId) {
+          contentContainerEl.classList.remove("active");
+          return;
+        }
+
+        contentContainerEl.classList.add("active");
+        document.getElementById("creator-id").innerHTML = model.creatorId;
+        document.getElementById("name").innerHTML = model.name;
+
+        const listEl = document.getElementById("list");
+        if (reset) {
+          listEl.innerHTML = "";
+        }
+        let n = 1;
+        for (const level of model.levels) {
+          if (!level.el) {
+            buildLevelEl(level);
+            listEl.appendChild(level.el);
+          }
+          if (filters.every(filter => filter(level))) {
+            level.el.classList.remove('filtered-level');
+            level.el.style.order = n;
+            n += 1;
+          } else {
+            level.el.classList.add('filtered-level');
+          }
+        }
+      };
+
+      const applyFilters = () => {
+        filters.length = 0;
+        const levelNameFilter = document.getElementById('level-name-filter')
+                                        .value.toLowerCase();
+        if (levelNameFilter) {
+          switch (document.getElementById('level-name-filter-type').value) {
+            case 'contains':
+              filters.push(l => l.name.toLowerCase().includes(levelNameFilter));
+              break;
+            case 'does not contain':
+              filters.push(l => !l.name.toLowerCase()
+                                       .includes(levelNameFilter));
+              break;
+            case 'starts with':
+              filters.push(l => l.name.toLowerCase()
+                                      .startsWith(levelNameFilter));
+              break;
+            case 'ption>does not start with':
+              filters.push(l => !l.name.toLowerCase()
+                                       .startsWith(levelNameFilter));
+              break;
+            case 'equals':
+              filters.push(l => l.name.toLowerCase() !== levelNameFilter);
+              break;
+          }
+        }
+        for (let i = 1; i <= 6; i++) {
+          if (!document.getElementById(`level-difficulty-${i}-filter`)
+                       .checked) {
+            filters.push(l => l.difficulty !== i);
+          }
+        }
+        if (!document.getElementById("level-difficulty-unk-filter").checked) {
+          filters.push(l => l.difficulty);
+        }
+
+        for (const tag of document.querySelectorAll(
+                                          "input[value='require']:checked")) {
+          filters.push(l => l.tags.includes(tag.name));
+        }
+        for (const tag of document.querySelectorAll(
+                                          "input[value='exclude']:checked")) {
+          filters.push(l => !l.tags.includes(tag.name));
+        }
+
+        if (!document.getElementById("level-unplayed-filter").checked) {
+          filters.push(l => l.played);
+        }
+        if (!document.getElementById("level-played-filter").checked) {
+          filters.push(l => l.beaten || !l.played);
+        }
+        if (!document.getElementById("level-beaten-filter").checked) {
+          filters.push(l => !l.beaten);
+        }
+        for (let i = 1; i <= 4; i++) {
+          if (!document.getElementById(`level-${i}p-filter`).checked) {
+            filters.push(l => l.players !== i);
+          }
+        }
+
+        updateView(false);
+      };
+
+      const clearFilters = () => {
+        filters.length = 0;
+        updateView(false);
+      };
+
+      const choose = level => {
+        ws.send(JSON.stringify({creatorId: model.creatorId, level}));
+      };
+
+      const tagRequest = new XMLHttpRequest();
+      tagRequest.open("GET",
+          "https://www.bscotch.net/api/levelhead/level-tags/counts");
+      tagRequest.send();
+      tagRequest.onreadystatechange = e => {
+        if (tagRequest.readyState === 4 && tagRequest.status === 200) {
+          for (const tagName of JSON.parse(tagRequest.responseText).data
+                                    .map(t => t.name).sort()) {
+            buildTagFilter(tagName);
+          }
+        }
+      };
+
+      ws = new WebSocket(`ws://${window.location.host}/ui/creatorCode`);
+      ws.onmessage = m => {
+        const data = JSON.parse(m.data);
+        switch (data.type) {
+          case "info":
+            model.creatorId = data.creatorId;
+            model.name = data.name;
+            model.levels = data.levels;
+            break;
+          case "levels":
+            model.levels = model.levels.concat(data.levels);
+            break;
+        }
+        updateView(data.type === "info");
+      };
+    </script>
+  </body>
+</html>
