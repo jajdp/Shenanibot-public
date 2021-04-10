@@ -195,6 +195,52 @@ const questions = {
       + '  a turn without limiting how many levels a viewer can have in the queue.'
     ),
     buildConfigQuestion(
+      'limitRoundDuration', {
+        type: 'confirm',
+        name: 'limitRoundDuration', // this is not stored in the config file
+        message: 'Limit round duration?',
+        default: a => fp.get('config.config.roundDuration', a) ? true : false,
+        askAnswered: true,
+        when: a => fp.get('config.config.priority', a) === 'rotation'
+      },
+        'Rotation mode can have the unintended consequence of making a viewer who\n'
+      + 'arrives early wait indefinitely to see their 2nd submitted level, in the\n'
+      + 'event that many viewers "trickle in" and submit levels.\n'
+      + '\n'
+      + 'To prevent such delays going on forever, you can limit how long a round will\n'
+      + 'accept new levels.  For example, if you set a round duration of 30 minutes\n'
+      + 'then once a level has been added to round 1, new viewers\' levels will only\n'
+      + 'be added to round 1 for at most the next 30 minutes; after that, they will\n'
+      + 'be added to round 2.\n'
+      + '\n'
+      + 'The timer for round R begins when two conditions are met:\n'
+      + '\n'
+      + '1) No level prior to R is accepting new levels\n'
+      + '2) At least one level has been added to R\n'
+      + '\n'
+      + 'Note that regardless of this setting, a round is closed when the queue has\n'
+      + 'advanced to a level from a subsequent round (but not if a level is pulled\n'
+      + 'forward into the current round).'
+    ),
+    buildConfigQuestion(
+      'config.roundDuration', {
+        when: a => {
+          if (a.config.config.priority === 'rotation') {
+            if (a.limitRoundDuration) {
+              return true;
+            }
+            a.config.config.roundDuration = 0;
+          }
+          return false;
+        },
+        message: 'Round Duration (in minutes):',
+        default: a => a.config.config.roundDuration || 30,
+        // type: 'number' acts up when validation fails, so use this instead
+        filter: i => typeof i === 'string' && i.match(/^\s*[1-9]\d*\s*$/) ? parseInt(i) : i,
+        validate: i => (typeof i !== 'number') ? 'Please enter a number of minutes' : true
+      }
+    ),
+    buildConfigQuestion(
       'config.levelLimitType', {
         type: 'list',
         message: "Level Submission Limit Type:",
