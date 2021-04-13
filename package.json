@@ -1,12 +1,13 @@
 {
   "name": "shenanibot-public",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "A Twitch bot that manages a queue of levels for Levelhead streamers",
   "main": "src/platforms/twitch/index.js",
   "dependencies": {
     "@bscotch/rumpus-ce": "^1.2.4",
     "@madelsberger/pausebuffer": "^1.0.0",
     "axios": "^0.21.1",
+    "clipboardy": "^2.3.0",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "inquirer": "^7.3.3",
@@ -14,12 +15,15 @@
     "tmi.js": "^1.5.0",
     "ws": "^7.3.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "jasmine": "^3.7.0"
+  },
   "scripts": {
     "start": "node .",
     "configure": "node src/config/index.js",
     "test": "node src/test/test.js",
-    "basictest": "node src/test/basictest.js"
+    "basictest": "node src/test/basictest.js",
+    "unittest": "./node_modules/.bin/jasmine"
   },
   "repository": {
     "type": "git",

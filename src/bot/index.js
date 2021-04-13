@@ -1,19 +1,39 @@
 const Rumpus = require("@bscotch/rumpus-ce");
-const ViewerLevel = require("./lib/level");
-const olServer = require("../overlay/server");
+const clipboard = require("clipboardy");
+
+const { ViewerLevel, Creator } = require("./lib/queueEntry");
+const { ProfileCache } = require("./lib/profileCache");
 const { rewardHelper } = require("../config/loader");
+const creatorCodeUi = require("../web/creatorCodeUi");
+const overlay = require("../web/overlay");
+const httpServer = require("../web/server");
 
 class ShenaniBot {
-  constructor(botOptions) {
+  constructor(botOptions, sendAsync = _ => {}) {
+    this.sendAsync = sendAsync;
     this.rce = new Rumpus.RumpusCE(botOptions.auth.delegationToken);
+    this.profileCache = new ProfileCache();
     this.options = botOptions.config;
     this.streamer = botOptions.auth.streamer;
     this.queue = [];
     this.queueOpen = true;
     this.users = {};
     this.levels = {};
-    if (this.options.priority === 'rotation') {
-      this.currentRound = 1;
+    this.onStatus = _ => {};
+    this.onQueue = _ => {};
+
+    if (this.options.priority === "rotation") {
+      this.playingRound = 1;
+      this.minOpenRound = 1;
+    }
+    if (this.options.httpPort) {
+      httpServer.start(this.options);
+      overlay.init();
+      this.onStatus = isOpen => overlay.sendStatus(isOpen);
+      this.onQueue = () => overlay.sendLevels(this.queue);
+      if (this.options.creatorCodeMode === "webui") {
+        creatorCodeUi.init((c, l) => this._specifyLevelForCreator(c, l));
+      }
     }
     this.twitch = {
       rewards: {
@@ -28,15 +48,15 @@ class ShenaniBot {
     };
 
     const behaviors = botOptions.twitch.rewardBehaviors;
-    if (Object.keys(behaviors).find(k => behaviors[k] === 'add')) {
+    if (Object.keys(behaviors).find(k => behaviors[k] === "add")) {
       this.twitch.usePointsToAdd = true;
     }
   }
 
   async command(message, username, rewardId) {
-    const args = message.split(" ");
+    const args = message.split(/\s+/);
     const command = args[0].startsWith(this.options.prefix)
-                  ? args[0].substring(this.options.prefix.length)
+                  ? args[0].substring(this.options.prefix.length).toLowerCase()
                   : undefined;
     if (! (command || rewardId)) {
       return "";
@@ -55,7 +75,7 @@ class ShenaniBot {
         case "next":
           return this.nextLevel();
         case "play":
-          return this.playSpecificLevel(args.slice(1).join(' ').toLowerCase());
+          return this.playSpecificLevel(args.slice(1).join(" ").toLowerCase());
         case "random":
           return this.randomLevel();
         case "mark":
@@ -93,19 +113,15 @@ class ShenaniBot {
   }
 
   openQueue() {
-    let response = "The queue has been opened, add some levels to it!";
-
     this.queueOpen = true;
-    olServer.sendStatus(true);
-    return response;
+    this.onStatus(true);
+    return "The queue has been opened, add some levels to it!";
   }
 
   closeQueue() {
-    let response = "The queue has been closed! No more levels :(";
-
     this.queueOpen = false;
-    olServer.sendStatus(false);
-    return response;
+    this.onStatus(false);
+    return "The queue has been closed! No more levels :(";
   }
 
   permitUser(username) {
@@ -113,17 +129,14 @@ class ShenaniBot {
       username = username.slice(1);
     }
 
-    let response;
     const user = this._getUser(username);
 
     if (this.queueOpen && (user.levelsSubmitted < this.options.levelLimit || !this._hasLimit())) {
-      response = `${username} is able to submit levels.`;
-      return response;
+      return `${username} is able to submit levels.`;
     }
 
     user.permit = true;
-    response = `@${username}, you may submit one level to the queue now.`;
-    return response;
+    return `@${username}, you may submit one level to the queue now.`;
   }
 
   giveBoostToUser(username) {
@@ -131,21 +144,19 @@ class ShenaniBot {
       username = username.slice(1);
     }
 
-    let response;
     const user = this._getUser(username);
 
     user.canBoost = true;
-    response = `@${username}, you may boost one level in the queue now.`;
-    return response;
+    return `@${username}, you may boost one level in the queue now.`;
   }
 
   nextLevel() {
-    let {empty, response} = this._dequeueLevel();
+    let {empty, response} = this._dequeue();
     if (!empty) {
       response = this._playLevel();
     }
 
-    olServer.sendLevels(this.queue);
+    this.onQueue();
     return response;
   }
 
@@ -154,13 +165,14 @@ class ShenaniBot {
 
     let match;
     if (match = args.match(/^(next\s|last\s)?from\s@?([a-zA-Z0-9][a-zA-z0-9_]{3,24})\s*$/)) {
-      const last = match[1] === 'last ';
+      const last = match[1] === "last ";
       const start = last ? this.queue.length - 1 : 1;
       const stop = i => last ? i > 0 : i < this.queue.length;
       const increment = last ? -1 : 1;
       for (let i = start; stop(i); i += increment) {
         if (this.queue[i] && this.queue[i].submittedBy === match[2]) {
           index = i;
+          break;
         }
       }
       if (!index) {
@@ -170,36 +182,36 @@ class ShenaniBot {
     if (args.match(/[1-9]/) && (match = args.match(/^\d+/))) {
       index = parseInt(args, 10) - 1;
     }
-    if (typeof index != 'number') {
+    if (typeof index != "number") {
       return "";
     }
     if (!this.queue[index]) {
       return `There is no level at position ${index + 1} in the queue!`;
     }
     if (index === 0) {
-      return `You're already playing ${this.queue[index].levelName}@${this.queue[index].levelId}!`;
+      return `You're already playing ${this.queue[index].display}!`;
     }
 
-    this._dequeueLevel();
+    this._dequeue();
     index -= 1;
     if (index > 0) {
-      const level = this.queue[index];
-      level.priority = true;
-      if (this.options.priority === 'rotation') {
-        level.round = this.currentRound;
+      const entry = this.queue[index];
+      entry.priority = true;
+      if (this.options.priority === "rotation") {
+        entry.round = this.playingRound;
       }
       this.queue.splice(index, 1)
-      this.queue.unshift(level);
+      this.queue.unshift(entry);
     }
-    let response = `Pulled ${this.queue[0].levelName}@${this.queue[0].levelId} to the front of the queue...`;
+    let response = `Pulled ${this.queue[0].display} to the front of the queue...`;
     response += this._playLevel();
 
-    olServer.sendLevels(this.queue);
+    this.onQueue();
     return response;
   }
 
   randomLevel() {
-    let {empty, response} = this._dequeueLevel();
+    let {empty, response} = this._dequeue();
     if (!empty) {
       const markerIndex = this.queue.indexOf(null);
       if (markerIndex !== 0) {
@@ -210,34 +222,33 @@ class ShenaniBot {
           groupLength = noPriorityIndex;
         }
 
-        if (this.queue[groupLength - 1].round > this.currentRound) {
-          groupLength = this.queue.findIndex(l => l.round > this.currentRound);
+        if (this.queue[groupLength - 1].round > this.playingRound) {
+          groupLength = this.queue.findIndex(l => l.round > this.playingRound);
         }
 
         const index = Math.floor(Math.random() * groupLength);
-        let randomLevel = this.queue[index];
+        let randomEntry = this.queue[index];
         this.queue.splice(index, 1)
-        this.queue.unshift(randomLevel);
+        this.queue.unshift(randomEntry);
 
         response = `Random Level... `
       }
-      response = (response || '') + this._playLevel();
+      response = (response || "") + this._playLevel();
     }
 
-    olServer.sendLevels(this.queue);
+    this.onQueue();
     return response;
   }
 
   async makeMarker() {
     // no point making back-to-back markers
     if (this.queue.length > 0 && !this.queue[this.queue.length - 1]) {
-      return '';
+      return "";
     }
 
     this.queue.push(null);
-    olServer.sendLevels(this.queue);
-    let response = "A marker has been added to the queue.";
-    return response;
+    this.onQueue();
+    return "A marker has been added to the queue.";
   }
 
   async setReward(rewardType, rewardId) {
@@ -269,13 +280,12 @@ class ShenaniBot {
     }
 
     behaviors[rewardId] = rewardType;
-    if (rewardType === 'add') {
+    if (rewardType === "add") {
       this.twitch.usePointsToAdd = true;
     }
 
-    let response = "Registered reward to " + rewards[rewardType] + ". "
-                 + rewardHelper.updateRewardConfig(behaviors);
-    return response;
+    return "Registered reward to " + rewards[rewardType] + ". "
+         + rewardHelper.updateRewardConfig(behaviors);
   }
 
   async unsetReward(rewardType) {
@@ -294,63 +304,59 @@ class ShenaniBot {
     }
 
     behaviors[rewardId] = undefined;
-    if (rewardType === 'add') {
+    if (rewardType === "add") {
       this.twitch.usePointsToAdd = false;
     }
 
-    let response = "Removed reward to " + rewards[rewardType] + ". "
-                 + rewardHelper.updateRewardConfig(behaviors);
-    return response;
+    return "Removed reward to " + rewards[rewardType] + ". "
+         + rewardHelper.updateRewardConfig(behaviors);
   }
 
   async checkLevel(levelId) {
-    let {valid, response} = this._validateLevelId(levelId)
-    if (!valid) {
-      return response;
+    if (this._getIdType(levelId) !== "level") {
+      return "Please enter a valid level code to check.";
     }
 
-    let levelInfo = await this.rce.levelhead.levels.search({ levelIds: levelId, includeAliases: true, includeMyInteractions: true } );
+    let levelInfo = await this.rce.levelhead.levels.search({ levelIds: levelId, includeMyInteractions: true } );
 
     if (!levelInfo.length) {
-      response = "Oops! That level does not exist!";
-      return response;
+      return "Oops! That level does not exist!";
     }
 
-    const level = levelInfo[0];
-    const interactions = level.interactions;
-    let verb = 'not played';
+    const level = new ViewerLevel(levelInfo[0].levelId, levelInfo[0].title, "");
+    const interactions = levelInfo[0].interactions;
+    let verb = "not played";
     if (interactions) {
       if (interactions.played) {
-        verb = 'played';
+        verb = "played";
       }
       if (interactions.completed) {
-        verb = 'beaten';
+        verb = "beaten";
       }
     }
 
-    response = `${this.streamer} has ${verb} ${level.title}@${level.levelId}.`;
-    return response;
+    return `${this.streamer} has ${verb} ${level.display}.`;
   }
 
-  async addLevelToQueue(levelId, username, rewardType) {
+  async addLevelToQueue(id, username, rewardType) {
     const user = this._getUser(username);
+    let response;
 
     if (!this.queueOpen && !user.permit) {
-      let response = "Sorry, queue is closed!";
+      return "Sorry, queue is closed!";
+    }
+
+    if (this.twitch.usePointsToAdd && !rewardType
+                                   && username !== this.streamer) {
+      return "Please use channel points to add levels.";
+    }
+
+    let type = this._getIdType(id)
+    if (response = this._typeError(type)) {
       return response;
     }
 
-    if (this.twitch.usePointsToAdd && !rewardType) {
-      let response = "Please use channel points to add levels.";
-      return response;
-    }
-
-    let {valid, response} = this._validateLevelId(levelId)
-    if (!valid) {
-      return response;
-    }
-
-    if (this._hasLimit() && user.levelsSubmitted >= this.options.levelLimit && !user.permit && rewardType !== 'unlimit') {
+    if (this._hasLimit() && user.levelsSubmitted >= this.options.levelLimit && !user.permit && rewardType !== "unlimit") {
       response = "You have submitted the maximum number of levels!";
       if (this.options.levelLimitType === "active") {
         response += " (You can add more when one of yours has been played.)";
@@ -358,56 +364,74 @@ class ShenaniBot {
       return response;
     }
 
-    const reason = this.levels[levelId];
-    if (reason) {
-      response = `That level ${reason}!`;
-      return response;
+    let entry = null;
+    if (type === "level") {
+      const reason = this.levels[id];
+      if (reason) {
+        return `That level ${reason}!`;
+      }
+
+      const levelInfo = await this.rce.levelhead.levels.search({ levelIds: id }, { doNotUseKey: true });
+
+      if (!levelInfo.length) {
+        return "Oops! That level does not exist!";
+      }
+
+      entry = new ViewerLevel(
+        id,
+        levelInfo[0].title,
+        username
+      );
     }
 
-    let levelInfo = await this.rce.levelhead.levels.search({ levelIds: levelId, includeAliases: true }, { doNotUseKey: true });
+    if (type === "creator") {
+      const creatorInfo = await this.rce.levelhead.players.search({ userIds: id, includeAliases: true }, { doNotUseKey: true });
 
-    if (!levelInfo.length) {
-      response = "Oops! That level does not exist!";
-      return response;
+      if (!creatorInfo.length) {
+        return "Oops! That creator does not exist!";
+      }
+
+      entry = new Creator(
+        id,
+        creatorInfo[0].alias.alias,
+        username
+      );
     }
 
-    let level = new ViewerLevel(
-      levelId,
-      levelInfo[0].title,
-      username
-    );
-
-    const pos = this._enqueueLevel(level, user);
-    olServer.sendLevels(this.queue);
+    const pos = this._enqueue(entry, user);
+    this.onQueue();
 
     user.levelsSubmitted++;
     user.permit = (username === this.streamer);
 
-    response = `${level.levelName}@${level.levelId} was added! Your level is #${pos} in the queue.`;
+    response = `${entry.display} was added as #${pos} in the queue.`;
     response = this._hasLimit() ? `${response} Submission ${user.levelsSubmitted}/${this.options.levelLimit}` : response;
 
     if (this.queue.length === 1) {
       response = `${response}\n${this._playLevel()}`;
     }
 
-    this.levels[levelId] = "is already in the queue";
+    if (type === "level") {
+      this.levels[id] = "is already in the queue";
+    }
     return response;
   }
 
-  removeLevelFromQueue(levelId, username) {
-    let {valid, response} = this._validateLevelId(levelId)
-    if (!valid) {
+  removeLevelFromQueue(id, username) {
+    let type = this._getIdType(id)
+    let response;
+    if (response = this._typeError(type)) {
       return response;
     }
 
-    const i = this.queue.findIndex(l => l && l.levelId === levelId);
+    const i = this.queue.findIndex(l => l && l.id === id);
     if (i === -1) {
       return "The level you tried to remove is not in the queue";
     }
 
-    const level = this.queue[i];
+    const entry = this.queue[i];
 
-    if (level.submittedBy !== username && this.streamer !== username) {
+    if (entry.submittedBy !== username && this.streamer !== username) {
       return "You can't remove a level from the queue that you didn't submit!";
     }
     if (i === 0) {
@@ -415,41 +439,41 @@ class ShenaniBot {
     }
 
     this._removeFromQueue(i);
-    olServer.sendLevels(this.queue);
-    response = `${level.levelName}@${level.levelId} was removed from the queue!`;
-    this.levels[levelId] = (username === this.streamer) ? `was removed by ${username}; it can't be re-added` : null;
+    this.onQueue();
+    if (entry.type === "level") {
+      this.levels[id] = (username === this.streamer) ? `was removed by ${username}; it can't be re-added` : null;
+    }
 
-    return response;
+    return `${entry.display} was removed from the queue!`;
   }
 
-  boostLevel(levelId, username) {
+  boostLevel(id, username) {
     const user = this._getUser(username);
     if (!user.canBoost && this.streamer !== username) {
       return `You can't boost levels without permission from ${this.streamer}!`;
     }
 
-    return this._processUrgentReward(levelId, () => user.canBoost = false);
+    return this._processUrgentReward(id, () => user.canBoost = false);
   }
 
   showQueue() {
     if (  this.queue.length === 0
        || (this.queue.length === 1 && !this.queue[0]) ) {
-      let response = "There aren't any levels in the queue!";
-      return response;
+      return "There aren't any levels in the queue!";
     }
 
     let limit = Math.min(10, this.queue.length);
     let maxIndex = limit - 1;
-    let response = '';
+    let response = "";
     let round = 0;
     for (let i = 0; i <= maxIndex; i++) {
-      const level = this.queue[i];
-      if (this.options.priority === 'rotation' && level && level.round > round) {
-        round = level.round;
+      const entry = this.queue[i];
+      if (this.options.priority === "rotation" && entry && entry.round > round) {
+        round = entry.round;
         response = `${response} **Round ${round}** :`;
       }
-      if (level) {
-        response = `${response} [${level.levelName}@${level.levelId}]`;
+      if (entry) {
+        response = `${response} [${entry.display}]`;
       } else {
         response = `${response} [== break ==]`;
         if (maxIndex < this.queue.length - 1) {
@@ -465,14 +489,12 @@ class ShenaniBot {
 
   showBotCommands() {
     const prefix = this.options.prefix;
-    const response = `${prefix}add [levelcode], ${prefix}bot, ${prefix}check [levelcode], ${prefix}queue, ${prefix}remove [levelcode]`;
-    return response;
+    return `${prefix}add [levelcode | creatorCode], ${prefix}bot, ${prefix}check [levelcode], ${prefix}queue, ${prefix}remove [levelcode | creatorCode]`;
   }
 
   showBotInfo() {
-    let response = `This bot was created for the LevelHead Community by jajdp and FantasmicGalaxy.
+    return `This bot was created for the LevelHead Community by jajdp and FantasmicGalaxy.
     Want to use it in your own stream? You can get it here: https://github.com/jajdp/Shenanibot-public`;
-    return response;
   }
 
   processReward(rewardId, message, username) {
@@ -486,54 +508,68 @@ class ShenaniBot {
         return this._processExpediteReward(message[0]);
       case "add":
       case "unlimit":
-        const levelId = message[
+        const id = message[
           (message[0] === `${this.options.prefix}add`) ? 1 : 0
         ];
-        return this.addLevelToQueue(levelId, username, behavior);
+        return this.addLevelToQueue(id, username, behavior);
     }
     return "";
   }
 
-  _processUrgentReward(levelId, onSuccess = () => null) {
-    const { level, response } = this._getQueuedLevelForReward(levelId);
-    if (!level) {
+  _processUrgentReward(id, onSuccess = () => null) {
+    const { entry, index, response } = this._getQueueEntryForReward(id);
+    if (!entry) {
       return response;
     }
-    level.priority = true;
+    const actions = []
+    if (!entry.priority) {
+      actions.push("was marked as priority!");
+      entry.priority = true;
+    }
+    if (this.options.priority === "rotation") {
+      entry.round = this.playingRound;
+    }
     let newIndex = this.queue.findIndex(
-                  (level, index) => index && (!level || !level.priority));
+        (e, i) => i && (!e || !e.priority || e.round > this.playingRound)
+    );
     if (newIndex === -1) {
       newIndex = this.queue.length;
     }
-    if (this.options.priority === 'rotation') {
-      const prevLevel = this.queue[newIndex - 1];
-      level.round = prevLevel ? prevLevel.round : this.currentRound;
+    if (newIndex >= index) {
+      newIndex = index;
+    } else {
+      actions.push(`is now #${newIndex + 1} in the queue.`);
     }
-    this.queue.splice(newIndex, 0, level);
+    if (actions.length === 0) {
+      actions.push("can't be given any higher priority!");
+    }
+    this.queue.splice(newIndex, 0, entry);
+    this.onQueue();
     onSuccess();
-    return `${level.levelName}@${level.levelId} was marked as priority! It is now #${newIndex + 1} in the queue.`;
+    return `${entry.display} ${actions.join(" It ")}`;
   }
 
-  _processPriorityReward(levelId) {
-    const { level, index, response } = this._getQueuedLevelForReward(levelId);
-    if (!level) {
+  _processPriorityReward(id) {
+    const { entry, index, response } = this._getQueueEntryForReward(id);
+    if (!entry) {
       return response;
     }
-    level.priority = true;
+    entry.priority = true;
     let i;
     for (i = index - 1; i > 0; i--) {
-      if (!this.queue[i] || this.queue[i].priority || this.queue[i].round < level.round) {
+      if (!this.queue[i] || this.queue[i].priority || this.queue[i].round < entry.round) {
         break;
       }
     }
     const newIndex = i + 1;
-    this.queue.splice(newIndex, 0, level);
-    return `${level.levelName}@${level.levelId} was marked as priority! It is now #${newIndex + 1} in the queue.`;
+    this.queue.splice(newIndex, 0, entry);
+    this.onQueue();
+    return `${entry.display} was marked as priority! It is now #${newIndex + 1} in the queue.`;
   }
 
-  _processExpediteReward(levelId) {
-    let { level, index, response } = this._getQueuedLevelForReward(levelId);
-    if (!level) {
+  _processExpediteReward(id) {
+    let { entry, index, response } = this._getQueueEntryForReward(id);
+    if (!entry) {
       return response;
     }
 
@@ -541,33 +577,37 @@ class ShenaniBot {
       response = "You can't expedite a level that's already next to be played.";
     } else if (!this.queue[index - 1]) {
       response = "You can't expedite a level that's right after a break in the queue.";
-    } else if (this.queue[index - 1].round < level.round) {
-      repsonse = "You can't expedite a level that's already the first to be played in its round.";
-    } else if (this.queue[index - 1].priority && !level.priority) {
+    } else if (this.queue[index - 1].round < entry.round) {
+      response = "You can't expedite a level that's already the first to be played in its round.";
+    } else if (this.queue[index - 1].priority && !entry.priority) {
       response = "You can't expedite a normal-priority level that's right after a high-priority level.";
     } else {
-      response = `${level.levelName}@${level.levelId} was expedited! It is now #${index} in the queue.`;
+      response = `${entry.display} was expedited! It is now #${index} in the queue.`;
       index -= 1;
     }
 
-    this.queue.splice(index, 0, level);
+    this.queue.splice(index, 0, entry);
+    this.onQueue();
     return response;
   }
 
-  _getQueuedLevelForReward(levelId) {
-    let {valid, response} = this._validateLevelId(levelId)
-    const i = this.queue.findIndex(l => l && l.levelId === levelId);
+  _getQueueEntryForReward(id) {
+    const type = this._getIdType(id);
+    const i = this.queue.findIndex(l => l && l.id === id);
+    let response;
 
-    if (valid) {
-      if (i === 0) {
-        response = "You can't change priority of the level being played!";
-      } else if (i === -1) {
-        response = "That level is not in the queue!";
-      }
+    if (response = this._typeError(type)) {
+      return response;
+    }
+
+    if (i === 0) {
+      response = "You can't change priority of the level being played!";
+    } else if (i === -1) {
+      response = "That level is not in the queue!";
     }
 
     return {
-      level: i > 0 ? this.queue.splice(i, 1)[0] : null,
+      entry: i > 0 ? this.queue.splice(i, 1)[0] : null,
       index: i,
       response
     };
@@ -583,37 +623,61 @@ class ShenaniBot {
     return this.users[username];
   }
 
-  _enqueueLevel(level, user) {
-    let laterLevels = [];
-    if (this.options.priority === 'rotation') {
-      level.round = Math.max((user.lastRound || 0) + 1, this.currentRound);
-      user.lastRound = level.round;
-      const n = this.queue.findIndex(l => l && l.round > level.round);
+  _setRoundTimer() {
+    this.roundTimer = setTimeout(() => {
+      this.minOpenRound += 1;
+      if (this.queue.find(e => e && e.round >= this.minOpenRound)) {
+        this._setRoundTimer();
+      } else {
+        this.roundTimer = null;
+      }
+    },
+    this.options.roundDuration * 60000);
+  }
+
+  _updatePlayingRound(round) {
+    this.playingRound = round;
+    if (round > this.minOpenRound) {
+      this.minOpenRound = round;
+      clearTimeout(this.roundTimer);
+      this._setRoundTimer();
+    }
+  }
+
+  _enqueue(entry, user) {
+    let laterEntries = [];
+    if (this.options.priority === "rotation") {
+      entry.round = Math.max((user.lastRound || 0) + 1, this.minOpenRound);
+      user.lastRound = entry.round;
+      const n = this.queue.findIndex(e => e && e.round > entry.round);
       if (n > -1) {
-        laterLevels = this.queue.splice(n);
+        laterEntries = this.queue.splice(n);
+      }
+      if (this.options.roundDuration && !this.roundTimer) {
+        this._setRoundTimer();
       }
     }
 
-    this.queue.push(level);
+    this.queue.push(entry);
     const pos = this.queue.length;
-    if (pos === 1 && this.options.priority === 'rotation') {
-      this.currentRound = level.round;
+    if (pos === 1 && this.options.priority === "rotation") {
+      this._updatePlayingRound(entry.round);
     }
 
-    while (laterLevels.length) {
-      const laterLevel = laterLevels.shift();
-      if (laterLevels[0] === null) {
+    while (laterEntries.length) {
+      const laterEntry = laterEntries.shift();
+      if (laterEntries[0] === null) {
         this.queue.push(null);
       }
-      if (laterLevel) {
-        this.queue.push(laterLevel);
+      if (laterEntry) {
+        this.queue.push(laterEntry);
       }
     }
 
     return pos;
   }
 
-  _dequeueLevel() {
+  _dequeue() {
     if (this.queue.length === 0) {
       return {
         empty: true,
@@ -621,14 +685,17 @@ class ShenaniBot {
       };
     }
 
-    if (this.queue[0]) {
-      this.rce.levelhead.bookmarks.remove(this.queue[0].levelId);
-      this.levels[this.queue[0].levelId] = "was already played";
+    if (this.options.creatorCodeMode === "webui") {
+      creatorCodeUi.clearCreatorInfo();
+    }
+    if (this.queue[0] && this.queue[0].type === "level") {
+      this.rce.levelhead.bookmarks.remove(this.queue[0].id);
+      this.levels[this.queue[0].id] = "was already played";
     }
     this._removeFromQueue(0);
 
-    if (this.options.priority === 'rotation' && this.queue[0]) {
-      this.currentRound = this.queue[0].round;
+    if (this.options.priority === "rotation" && this.queue[0]) {
+      this._updatePlayingRound(this.queue[0].round);
     }
 
     return {
@@ -639,42 +706,71 @@ class ShenaniBot {
 
   _playLevel() {
     if (this.queue[0]) {
-      this.rce.levelhead.bookmarks.add(this.queue[0].levelId);
-      return `Now playing ${this.queue[0].levelName}@${this.queue[0].levelId} submitted by ${this.queue[0].submittedBy}`;
+      if (this.queue[0].type === "level") {
+        this.rce.levelhead.bookmarks.add(this.queue[0].id);
+        this.profileCache.updateLevel({id: this.queue[0].id, played: true});
+        return `Now playing ${this.queue[0].display} submitted by ${this.queue[0].submittedBy}`;
+      }
+      if (this.queue[0].type === "creator") {
+        switch (this.options.creatorCodeMode) {
+          case "clipboard":
+            clipboard.writeSync(this.queue[0].id);
+            break;
+          case "webui":
+            creatorCodeUi.setCreatorInfo({
+              creatorId: this.queue[0].id,
+              name: this.queue[0].name
+            });
+            this._getLevelsForCreator(this.queue[0].id,
+                                      creatorCodeUi.addLevelsToCreatorInfo)
+            break;
+        }
+        return `Now playing a level from ${this.queue[0].display} submitted by ${this.queue[0].submittedBy}`;
+      }
     }
     return "Not currently playing a queued level.";
   }
 
-  _validateLevelId(id) {
-    if (id.length !== 7) {
-      return {
-        valid: false,
-        response: `${id} is not a valid level code, they're 7 characters long!`
-      };
+  _getIdType(id) {
+    if (id.match(/^[a-z0-9]{7}$/)) {
+      return "level";
     }
-    return {valid: true, response: null};
+    if (id.match(/^[a-z0-9]{6}$/)) {
+      return "creator";
+    }
+    return null;
+  }
+
+  _typeError(type) {
+    if (this.options.creatorCodeMode === "reject" && type !== "level") {
+      return "Please enter a valid level code.";
+    }
+    if (!type) {
+      return "Please enter eithe a valid 7-digit level code, or a valid 6-digit creator code.";
+    }
+    return null;
   }
 
   _removeFromQueue(index) {
     if (this.queue[index]) {
-      const level = this.queue[index];
-      const username = level.submittedBy;
+      const entry = this.queue[index];
+      const username = entry.submittedBy;
       const user = this._getUser(username);
 
-      if (this.options.levelLimitType === "active") {
+      if (this.options.levelLimitType === "active" || index) {
         user.levelsSubmitted--;
       }
 
-      if (this.options.priority === 'rotation' && index) {
-        let destRound = level.round;
+      if (this.options.priority === "rotation" && index) {
+        let destRound = entry.round;
         user.lastRound = 0;
         for (let i = index + 1; i < this.queue.length; i++) {
-          const laterLevel = this.queue[i];
-          if (laterLevel && laterLevel.submittedBy === username) {
-            this.queue[index] = laterLevel;
+          const laterEntry = this.queue[i];
+          if (laterEntry && laterEntry.submittedBy === username) {
+            this.queue[index] = laterEntry;
             index = i;
-            const nextDestRound = laterLevel.round;
-            laterLevel.round = destRound;
+            const nextDestRound = laterEntry.round;
+            laterEntry.round = destRound;
             user.lastRound = destRound;
             destRound = nextDestRound;
           }
@@ -684,8 +780,66 @@ class ShenaniBot {
     this.queue.splice(index, 1);
   }
 
+  async _getLevelsForCreator(creatorId, levelsCb) {
+    const cachedLevels = this.profileCache.getLevelsForCreator(creatorId);
+    if (cachedLevels) {
+      levelsCb(cachedLevels);
+      return;
+    }
+
+    const maxLevels = 128;
+    let gotMaxLevels;
+    let query = {
+      userIds: creatorId,
+      limit: maxLevels,
+      sort: "createdAt",
+      includeMyInteractions: true,
+      includeStats: true,
+    };
+
+    do {
+      const levelInfo = await this.rce.levelhead.levels.search(query);
+      const loadedLevels = levelInfo.map(li => ({
+        ...new ViewerLevel(li.levelId, li.title, ""),
+        date: li.createdAt,
+        avatar: li.avatarUrl(),
+        players: li.requiredPlayers,
+        tags: li.tagNames,
+        difficulty: li.stats.Players > 10 ? li.stats.Diamonds : null,
+        played: !!(li.interactions && li.interactions.played),
+        beaten: !!(li.interactions && li.interactions.completed),
+      }));
+      this.profileCache.addLevelsForCreator(creatorId, loadedLevels);
+      levelsCb(loadedLevels);
+
+      gotMaxLevels = levelInfo.length === maxLevels;
+      if (gotMaxLevels) {
+        query.maxCreatedAt = levelInfo[maxLevels - 1].createdAt;
+        query.tiebreakerItemId = levelInfo[maxLevels - 1]._id;
+        await new Promise(r => setTimeout(r, 1000));
+      }
+    } while( gotMaxLevels );
+  }
+
+  _specifyLevelForCreator(creatorId, level) {
+    const oldEntry = this.queue[0];
+    if (!oldEntry || oldEntry.type !== "creator"
+                  || oldEntry.id !== creatorId) {
+      return false;
+    }
+    const entry = new ViewerLevel(level.id, level.name, oldEntry.submittedBy);
+    for (const key of Object.keys(oldEntry).filter(k => !(k in entry))) {
+      entry[key] = oldEntry[key];
+    }
+    this.queue[0] = entry;
+    this.sendAsync( this._playLevel() );
+
+    this.onQueue();
+    return true;
+  }
+
   _hasLimit() {
-    return this.options.levelLimitType !== 'none' && this.options.levelLimit > 0;
+    return this.options.levelLimitType !== "none" && this.options.levelLimit > 0;
   }
 }
 
