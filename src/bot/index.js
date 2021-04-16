@@ -721,6 +721,10 @@ class ShenaniBot {
             let levels = [];
             this._getLevelsForCreator(this.queue[0].id,
                                       l => levels = levels.concat(l), () => {
+              if (!levels.length) {
+                this.sendAsync(`Unable to find levels for ${this.queue[0].display}!`);
+                return;
+              }
               if (levels.find(l => !l.played)) {
                 levels = levels.filter(l => !l.played);
               }
@@ -737,7 +741,7 @@ class ShenaniBot {
                                       creatorCodeUi.addLevelsToCreatorInfo)
             break;
         }
-        return `Now playing a level from ${this.queue[0].display} submitted by ${this.queue[0].submittedBy}`;
+        return `Picking a level from ${this.queue[0].display} (submitted by ${this.queue[0].submittedBy})...`;
       }
     }
     return "Not currently playing a queued level.";
