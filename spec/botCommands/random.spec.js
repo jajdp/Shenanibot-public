@@ -5,11 +5,11 @@ let setRandomizerToMin;
 
 describe("the !random command", () => {
   beforeAll(function() {
-    setRandomizerToMin = this.setRandomizerToMin;
+    prependToRandomSequence = this.prependToRandomSequence;
   });
 
   const cb = async bot => {
-    setRandomizerToMin();
+    prependToRandomSequence(0);
     await bot.command("!random", "streamer");
   };
   itDequeues(cb);

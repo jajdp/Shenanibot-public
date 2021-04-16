@@ -289,6 +289,9 @@ const questions = {
           name: 'Copy the creator code to the clipboard',
           value: 'clipboard'
         }, {
+          name: 'Pick randomly; chooses an unplayed level if possible',
+          value: 'auto'
+        }, {
           name: 'Show the creator code in chat but take no further action',
           value: 'manual'
         }, {

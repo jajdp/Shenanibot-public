@@ -75,6 +75,37 @@ module.exports = itPlaysALevel = (n, cb) => {
         expect(this.clipboard.content).toEqual("emp002");
       });
 
+      it("picks a level randomly if configured to do so", async function() {
+        let bot;
+        let queue;
+        const setup = async () => {
+          bot = this.buildBotInstance({config: {
+            creatorCodeMode: "auto",
+            httpPort: 8080
+          }});
+          if (n > 1) {
+            await this.addLevels(bot, n - 2);
+            await bot.command("!add emp001", "viewer");
+            await bot.command("!add emp010", "viewer0");
+            await bot.command("!add emp003", "viewer");
+          }
+        };
+
+        await setup();
+        this.setRandomizerToMax();
+        await cb(bot, "viewer0", "emp010");
+
+        queue = await this.getQueue();
+        expect(queue[0].entry.id).toEqual("010l010");
+
+        await setup();
+        this.setRandomizerToMin();
+        await cb(bot, "viewer0", "emp010");
+
+        queue = await this.getQueue();
+        expect(queue[0].entry.id).toEqual("010l001");
+      });
+
       it("sends a websocket update if configured to do so", async function() {
         const bot = this.buildBotInstance({config: {
           httpPort: 8080,

@@ -716,6 +716,15 @@ class ShenaniBot {
           case "clipboard":
             clipboard.writeSync(this.queue[0].id);
             break;
+          case "auto":
+            const creatorId = this.queue[0].id;
+            let levels = [];
+            this._getLevelsForCreator(this.queue[0].id,
+                                      l => levels = levels.concat(l), () => {
+              const i = Math.floor(Math.random() * levels.length);
+              this._specifyLevelForCreator(creatorId, levels[i]);
+            });
+            break;
           case "webui":
             creatorCodeUi.setCreatorInfo({
               creatorId: this.queue[0].id,
@@ -780,10 +789,11 @@ class ShenaniBot {
     this.queue.splice(index, 1);
   }
 
-  async _getLevelsForCreator(creatorId, levelsCb) {
+  async _getLevelsForCreator(creatorId, levelsCb, doneCb = () => {}) {
     const cachedLevels = this.profileCache.getLevelsForCreator(creatorId);
     if (cachedLevels) {
       levelsCb(cachedLevels);
+      doneCb();
       return;
     }
 
@@ -819,6 +829,8 @@ class ShenaniBot {
         await new Promise(r => setTimeout(r, 1000));
       }
     } while( gotMaxLevels );
+
+    doneCb();
   }
 
   _specifyLevelForCreator(creatorId, level) {
