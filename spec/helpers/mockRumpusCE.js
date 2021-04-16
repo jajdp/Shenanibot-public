@@ -63,7 +63,7 @@ class MockRumpusCE {
             const min = (tiebreakerItemId || 0) + 1
             const max = Math.min(empMatch[1], min + limit - 1);
             for (let i = min; i <= max; i++) {
-              const n = (i < 99 ? "0" : "") + (i < 9  ? "0" : "") + i;
+              const n = (i < 100 ? "0" : "") + (i < 10 ? "0" : "") + i;
               levels.push(makeLevel(i, `${empMatch[1]}l${n}`,
                                     `Employee ${empMatch[1]} Level ${n}`,
                                      userIds));

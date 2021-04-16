@@ -721,6 +721,9 @@ class ShenaniBot {
             let levels = [];
             this._getLevelsForCreator(this.queue[0].id,
                                       l => levels = levels.concat(l), () => {
+              if (levels.find(l => !l.played)) {
+                levels = levels.filter(l => !l.played);
+              }
               const i = Math.floor(Math.random() * levels.length);
               this._specifyLevelForCreator(creatorId, levels[i]);
             });

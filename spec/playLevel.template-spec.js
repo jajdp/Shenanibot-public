@@ -106,6 +106,52 @@ module.exports = itPlaysALevel = (n, cb) => {
         expect(queue[0].entry.id).toEqual("010l001");
       });
 
+      it("prefers unplayed levels when choosing randomly", async function() {
+        let bot;
+        let queue;
+        const setup = async () => {
+          bot = this.buildBotInstance({config: {
+            creatorCodeMode: "auto",
+            httpPort: 8080
+          }});
+
+          // not easy for the mocks to let us control which levels are played,
+          // so we'll populate the cache and update played status there
+          this.setRandomizerToMin();
+          await bot.command("!add emp010", "viewer");  // will play 001
+          await bot.command("!add 010l002", "viewer");
+          await bot.command("!add 010l004", "viewer");
+          await bot.command("!add 010l005", "viewer");
+          await bot.command("!add 010l006", "viewer");
+          await bot.command("!add 010l008", "viewer");
+          console.log(await bot.command("!add 010l009", "viewer"));
+          await bot.command("!add 010l010", "viewer");
+          for(let i = 0; i < 8; i++) {
+            await bot.command("!next", "streamer");
+          }
+          if (n > 1) {
+            await this.addLevels(bot, n - 2);
+            await bot.command("!add emp001", "viewer");
+            await bot.command("!add emp010", "viewer0");
+            await bot.command("!add emp003", "viewer");
+          }
+        };
+
+        await setup();
+        this.setRandomizerToMax();
+        await cb(bot, "viewer0", "emp010");
+
+        queue = await this.getQueue();
+        expect(queue[0].entry.id).toEqual("010l007");
+
+        await setup();
+        this.setRandomizerToMin();
+        await cb(bot, "viewer0", "emp010");
+
+        queue = await this.getQueue();
+        expect(queue[0].entry.id).toEqual("010l003");
+      });
+
       it("sends a websocket update if configured to do so", async function() {
         const bot = this.buildBotInstance({config: {
           httpPort: 8080,
