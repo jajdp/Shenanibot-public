@@ -12,7 +12,7 @@
         transition-property: opacity;
         transition-duration: 2s;
       }
-      #content-container.active {
+      #content-container.active:not(.hidden) {
         opacity: 1;
       }
       #background {
@@ -124,6 +124,15 @@
         height: 64px;
         width: 64px;
       }
+      .button-bar {
+        display: flex;
+      }
+      .button-bar button {
+        flex: none;
+      }
+      .button-spacer {
+        flex: auto;
+      }
       #tabs {
         margin-top: 10px;
       }
@@ -184,9 +193,11 @@
       </div>
     </div>
 
-    <div>
+    <div class="button-bar">
       <button onclick="selectTab('filters')" type="button">Filters</button>
       <button onclick="selectTab('help')" type="button">Help</button>
+      <span class="button-spacer"></span>
+      <button id="hide-show" onclick="toggleHide()" type="button">Hide</button>
       <hr>
     </div>
     <div id="tabs">
@@ -332,6 +343,7 @@
         name: null,
         levels: []
       };
+      let hidden = false;
       const filters = [];
 
       const selectTab = tabName => {
@@ -341,6 +353,18 @@
           } else {
             tab.classList.remove('active-tab');
           }
+        }
+      };
+
+      const toggleHide = () => {
+        hidden = !hidden;
+        document.getElementById('hide-show').innerHTML
+                                                   = hidden ? "Show" : "Hide";
+        const contentContainerEl = document.getElementById("content-container");
+        if (hidden) {
+          contentContainerEl.classList.add("hidden");
+        } else {
+          contentContainerEl.classList.remove("hidden");
         }
       };
 
