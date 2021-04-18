@@ -93,13 +93,13 @@ The bot needs a token with the following permissions:
 - View, and, and delete own Levelhead level bookmarks
 
 ### Queue Management Options
-Here you can decide whether levels are taken into the queue in the order received, or whether viewers "take turns" in a rotation. You can also configure limits on how many levels each viewer may submit.
+Here you can decide whether levels are taken into the queue in the order received, or whether viewers "take turns" in a rotation; configure limits on how many levels each viewer may submit; and determine how to handle creator codes.
 
 ### Chat Options
 Options that control the bot's interaction with chat are found here. You can change the prefix used to recognize bot cmmands. (By default this is !, and it is recommended to use this if possible.) You can also enable or disable message throttling.
 
-### Overlay Options
-You can enable or diable the overlay server, which allows you to include information about the queue in your stream layout (provided your streaming software can be set up to display a web view, such as with OBS Browser Sources).
+### Web Server Options
+You can enable or diable the embedded web server. This allows you to use overlays to include information about the queue in your stream layout (provided your streaming software can be set up to display a web view, such as with OBS Browser Sources) and can be used to provide an interactive UI for choosing levels for submitted creator codes.
 
 Once you've configured this feature, the bot will provide a URL with setup instructions at start-up. (Most of the overlay setup is done in your streaming software.)
 
@@ -145,7 +145,7 @@ You can use `!noreward` to remove the association of a behavior from a reward.  
 
 ### Behaviors
 
-`urgent` - Mark a level as "high priority" and move it to the front of the queue subject to the following rules:  The "now playing" level is not affected.  If there are other "high priority" levels at the front of the queue, the level is added after them.  The level must already be in the queue.
+`urgent` - Mark a level as "high priority" and move it to the front of the queue subject to the following rules:  The "now playing" level is not affected.  If there are other "high priority" levels at the front of the queue, the level is added after them (unless they're in a later round when using "rotation" priority).  The level must already be in the queue.
 
 If `PRIORITY` is set to "rotation", the level's round assignment may change to be consistent with its new location in the queue.  However, for purposes of deciding what round the viewer's next submission would be added to, the level is still considered to occupy their spot in the round to which it was originally assigned.
 
