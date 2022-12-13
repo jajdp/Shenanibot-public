@@ -8,7 +8,7 @@
     "@madelsberger/pausebuffer": "^1.0.0",
     "axios": "^0.21.1",
     "dotenv": "^8.2.0",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "inquirer": "^7.3.3",
     "lodash": "^4.17.20",
     "tmi.js": "^1.5.0",
